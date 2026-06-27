@@ -1,0 +1,99 @@
+{
+  "cases": [
+    {
+      "case_id": "visible_single_layer_convection",
+      "length_m": 0.08,
+      "num_cells": 16,
+      "t_left_c": 80.0,
+      "t_inf_c": 22.0,
+      "h_w_m2_k": 18.0,
+      "layers": [
+        {
+          "name": "plate",
+          "x_start_m": 0.0,
+          "x_end_m": 0.08,
+          "k_w_m_k": 1.2,
+          "q_w_m3": 0.0
+        }
+      ]
+    },
+    {
+      "case_id": "visible_two_layers_no_contact",
+      "length_m": 0.1,
+      "num_cells": 20,
+      "t_left_c": 70.0,
+      "t_inf_c": 20.0,
+      "h_w_m2_k": 25.0,
+      "layers": [
+        {
+          "name": "spread",
+          "x_start_m": 0.0,
+          "x_end_m": 0.04,
+          "k_w_m_k": 1.1,
+          "q_w_m3": 0.0
+        },
+        {
+          "name": "cover",
+          "x_start_m": 0.04,
+          "x_end_m": 0.1,
+          "k_w_m_k": 0.45,
+          "q_w_m3": 0.0
+        }
+      ]
+    },
+    {
+      "case_id": "visible_two_layers_small_source",
+      "length_m": 0.12,
+      "num_cells": 24,
+      "t_left_c": 65.0,
+      "t_inf_c": 24.0,
+      "h_w_m2_k": 30.0,
+      "layers": [
+        {
+          "name": "die_attach",
+          "x_start_m": 0.0,
+          "x_end_m": 0.05,
+          "k_w_m_k": 0.8,
+          "q_w_m3": 2500.0
+        },
+        {
+          "name": "heat_spreader",
+          "x_start_m": 0.05,
+          "x_end_m": 0.12,
+          "k_w_m_k": 2.4,
+          "q_w_m3": 0.0
+        }
+      ]
+    },
+    {
+      "case_id": "visible_mild_contact",
+      "length_m": 0.1,
+      "num_cells": 20,
+      "t_left_c": 90.0,
+      "t_inf_c": 25.0,
+      "h_w_m2_k": 35.0,
+      "layers": [
+        {
+          "name": "chip",
+          "x_start_m": 0.0,
+          "x_end_m": 0.04,
+          "k_w_m_k": 1.6,
+          "q_w_m3": 3000.0
+        },
+        {
+          "name": "sink",
+          "x_start_m": 0.04,
+          "x_end_m": 0.1,
+          "k_w_m_k": 4.0,
+          "q_w_m3": 0.0
+        }
+      ],
+      "contacts": [
+        {
+          "x_m": 0.04,
+          "r_contact_m2_k_w": 0.002
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+--- a/thermal_stack/materials.py
++++ b/thermal_stack/materials.py
+@@ -4,8 +4,7 @@
+ 
+ 
+ def material_face_resistance(k_left: float, k_right: float, dx_m: float) -> float:
+-    k_face = 0.5 * (k_left + k_right)
+-    return dx_m / k_face
++    return dx_m / (2.0 * k_left) + dx_m / (2.0 * k_right)
+ 
+ 
+ def contact_resistance(r_contact_m2_k_w: float) -> float:

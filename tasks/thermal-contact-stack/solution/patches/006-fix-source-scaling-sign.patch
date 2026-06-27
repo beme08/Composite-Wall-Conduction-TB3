@@ -1,0 +1,12 @@
+--- a/thermal_stack/assembly.py
++++ b/thermal_stack/assembly.py
+@@ -10,8 +10,7 @@
+ 
+ 
+ def source_contribution(q_w_m3: float, dx_m: float) -> float:
+-    amount = q_w_m3
+-    return -amount
++    return q_w_m3 * dx_m
+ 
+ 
+ def assemble_system(case: Case, mesh: Mesh) -> tuple[np.ndarray, np.ndarray]:

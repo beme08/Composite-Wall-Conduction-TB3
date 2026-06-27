@@ -1,0 +1,24 @@
+--- a/thermal_stack/postprocess.py
++++ b/thermal_stack/postprocess.py
+@@ -19,14 +19,17 @@
+         t_right = float(temperatures[m])
+         g_face = internal_face_conductance(mesh.k_w_m_k[m - 1], mesh.k_w_m_k[m], interface.r_contact_m2_k_w, mesh.dx_m)
+         heat_flux = g_face * (t_left - t_right)
+-        continuous_temperature = 0.5 * (t_left + t_right)
++        k_left = mesh.k_w_m_k[m - 1]
++        k_right = mesh.k_w_m_k[m]
++        temperature_left = t_left - heat_flux * mesh.dx_m / (2.0 * k_left)
++        temperature_right = t_right + heat_flux * mesh.dx_m / (2.0 * k_right)
+         diagnostics.append(
+             {
+                 "x_m": interface.x_m,
+                 "heat_flux_w_m2": heat_flux,
+-                "temperature_left_c": continuous_temperature,
+-                "temperature_right_c": continuous_temperature,
+-                "contact_delta_t_c": 0.0,
++                "temperature_left_c": temperature_left,
++                "temperature_right_c": temperature_right,
++                "contact_delta_t_c": temperature_left - temperature_right,
+             }
+         )
+     return diagnostics

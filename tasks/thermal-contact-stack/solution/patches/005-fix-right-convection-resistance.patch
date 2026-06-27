@@ -1,0 +1,8 @@
+--- a/thermal_stack/materials.py
++++ b/thermal_stack/materials.py
+@@ -21,4 +21,4 @@
+ 
+ 
+ def right_boundary_conductance(k_right_cell: float, h_w_m2_k: float, dx_m: float) -> float:
+-    return h_w_m2_k
++    return 1.0 / (dx_m / (2.0 * k_right_cell) + 1.0 / h_w_m2_k)

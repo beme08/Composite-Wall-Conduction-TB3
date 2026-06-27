@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Harbor / TB3 jobs
+jobs/
+logs/
+*.log
+
+# Local references / papers
+references/
+*.pdf
+
+# Secrets
+.env
+auth.json
+tokens.json
+*.token
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/

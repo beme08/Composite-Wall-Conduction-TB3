@@ -1,0 +1,11 @@
+--- a/thermal_stack/mesh.py
++++ b/thermal_stack/mesh.py
+@@ -89,7 +89,7 @@
+     k_values: list[float] = []
+     q_values: list[float] = []
+     for i in range(case.num_cells):
+-        x_probe = min((i + 1) * dx_m, case.length_m)
++        x_probe = (i + 0.5) * dx_m
+         layer = _layer_at_x(case.layers, x_probe)
+         k_values.append(layer.k_w_m_k)
+         q_values.append(layer.q_w_m3)

@@ -1,0 +1,17 @@
+--- a/thermal_stack/postprocess.py
++++ b/thermal_stack/postprocess.py
+@@ -38,10 +38,10 @@
+ def fluxes_and_residual(case: Case, mesh: Mesh, temperatures: np.ndarray) -> tuple[float, float, float]:
+     g_left = left_boundary_conductance(mesh.k_w_m_k[0], mesh.dx_m)
+     g_right = right_boundary_conductance(mesh.k_w_m_k[-1], case.h_w_m2_k, mesh.dx_m)
+-    left_flux = g_left * (float(temperatures[0]) - case.t_left_c)
+-    right_flux = g_right * (case.t_inf_c - float(temperatures[-1]))
+-    source_total = sum(mesh.q_w_m3)
+-    residual = left_flux + source_total + right_flux
++    left_flux = g_left * (case.t_left_c - float(temperatures[0]))
++    right_flux = g_right * (float(temperatures[-1]) - case.t_inf_c)
++    source_total = sum(q * mesh.dx_m for q in mesh.q_w_m3)
++    residual = right_flux - left_flux - source_total
+     return left_flux, right_flux, residual
+ 
+ 

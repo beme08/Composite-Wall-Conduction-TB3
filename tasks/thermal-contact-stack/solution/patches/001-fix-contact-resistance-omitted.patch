@@ -1,0 +1,11 @@
+--- a/thermal_stack/materials.py
++++ b/thermal_stack/materials.py
+@@ -9,7 +9,7 @@
+ 
+ 
+ def contact_resistance(r_contact_m2_k_w: float) -> float:
+-    return 0.0
++    return r_contact_m2_k_w
+ 
+ 
+ def internal_face_conductance(k_left: float, k_right: float, r_contact_m2_k_w: float, dx_m: float) -> float:

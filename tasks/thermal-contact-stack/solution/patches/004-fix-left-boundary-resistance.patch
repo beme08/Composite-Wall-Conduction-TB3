@@ -1,0 +1,11 @@
+--- a/thermal_stack/materials.py
++++ b/thermal_stack/materials.py
+@@ -17,7 +17,7 @@
+ 
+ 
+ def left_boundary_conductance(k_left_cell: float, dx_m: float) -> float:
+-    return k_left_cell / dx_m
++    return 2.0 * k_left_cell / dx_m
+ 
+ 
+ def right_boundary_conductance(k_right_cell: float, h_w_m2_k: float, dx_m: float) -> float:
