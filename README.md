@@ -33,12 +33,16 @@ repository (not a TB3 upstream PR).
 - Oracle validation: ✅
 - Nop validation: ✅
 - Docker oracle/nop: ✅
-- Post-hardening Codex gatekeeper run: reward **0.0** ✅
-- Post-hardening Claude run: API rate-limit exception (not counted as a valid trial)
-- Full 3× Codex + 3× Claude + cheat trials: ⬜ **not run**
+- Codex standard 3/3 valid failures ✅
+- Claude standard 3/3 valid failures ✅
+- Codex local cheat reproduction: reward 0.0 ✅
+- Claude local cheat reproduction: reward 0.0 ✅
 - **Models:** OpenAI GPT-5.5 (extra-high reasoning) via Codex, Anthropic Claude Opus 4.8 (high effort) via Claude Code
 
-See `docs/trial-results.md` for the full trial history.
+See `docs/trial-results.md` for the full trial history,
+[`docs/codex-trajectory-review.md`](docs/codex-trajectory-review.md) for Codex trajectory analysis,
+[`docs/claude-trajectory-review.md`](docs/claude-trajectory-review.md) for Claude trajectory analysis, and
+[`docs/failure-analysis.md`](docs/failure-analysis.md) for failure mode analysis.
 
 ## Review Steps
 
