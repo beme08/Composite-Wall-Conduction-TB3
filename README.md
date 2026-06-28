@@ -1,8 +1,8 @@
 # Thermal Stack Calibration TB3 Task
 
-This repository contains a Terminal-Bench 3 compatible task named
-`thermal-stack-calibration`, expected package name
-`beme08/thermal-stack-calibration`.
+A **Terminal-Bench 3 (TB3)** compatible task built as a coding assignment for a
+**Y Combinator AI company**. Task name `thermal-stack-calibration`, expected
+package name `beme08/thermal-stack-calibration`.
 
 The task asks an agent to repair a legacy electronics-cooling thermal-stack
 qualification tool. The public instruction no longer gives the complete solver
@@ -20,8 +20,22 @@ independent deterministic reference solver on hidden generalization cases.
 - `tools/partial_fix_audit.py` - case differentiation and 256-state audit
 - `docs/` - build notes, failure analysis, and local validation results
 
-No commits, pushes, uploads, or official `/run` trials have been performed for
-the v2 calibration task.
+## Relationship to Terminal-Bench 3
+
+This is a **Terminal-Bench 3 (TB3)** compatible task built as a coding
+assignment for a **Y Combinator AI company**. Delivered as a standalone GitHub
+repository (not a TB3 upstream PR).
+
+## Current status
+
+- Oracle validation: ✅
+- Nop validation: ✅
+- Docker oracle/nop: ✅
+- Post-hardening Codex gatekeeper run: reward **0.0** ✅
+- Post-hardening Claude run: API rate-limit exception (not counted as a valid trial)
+- Full 3× Codex + 3× Claude + cheat trials: ⬜ **not run**
+
+See `docs/trial-results.md` for the full trial history.
 
 ## Review Steps
 
