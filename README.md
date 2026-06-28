@@ -25,7 +25,7 @@ package name `beme08/thermal-stack-calibration`.
 ## Relationship to Terminal-Bench 3
 
 This is a **Terminal-Bench 3 (TB3)** compatible task built as a coding
-assignment for a **Y Combinator AI company**. Delivered as a standalone GitHub
+assignment for a **YCombinator AI company**. Delivered as a standalone GitHub
 repository (not a TB3 upstream PR).
 
 ## Current status
