@@ -132,8 +132,9 @@ too direct.
 
 The later calibration-driven task shifted toward calibration artifacts,
 engineering notes, state/order coupling, and public/hidden generalization.
-A post-fix Codex gatekeeper run recorded reward 0.0, suggesting the task became
-harder, but the full required trial matrix was not completed.
+Post-fix gatekeeper runs completed the required local trial matrix: Codex and
+Claude Code each produced 3/3 valid standard failures, and both adversarial
+hack-prompt runs received reward 0.0.
 
 ## Additional References To Verify
 
