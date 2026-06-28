@@ -1,0 +1,120 @@
+# References and Design Rationale
+
+This document collects papers, benchmark docs, and articles that informed the
+task design, validation strategy, and failure analysis. These references are
+not required at runtime and are not part of the benchmark environment.
+
+## Terminal-Bench / Harbor / Evaluation Infrastructure
+
+- Terminal-Bench 3 repository
+  https://github.com/harbor-framework/terminal-bench-3
+
+- Terminal-Bench 3 contributing guide
+  https://raw.githubusercontent.com/harbor-framework/terminal-bench-3/main/CONTRIBUTING.md
+
+- Terminal-Bench 3 reviewing guide
+  https://raw.githubusercontent.com/harbor-framework/terminal-bench-3/main/REVIEWING.md
+
+- Terminal-Bench 3 task implementation rubric
+  https://raw.githubusercontent.com/harbor-framework/terminal-bench-3/main/rubrics/task-implementation.toml
+
+- Terminal-Bench 3 task proposal rubric
+  https://raw.githubusercontent.com/harbor-framework/terminal-bench-3/main/rubrics/task-proposal.md
+
+- Terminal-Bench 3 trial analysis rubric
+  https://raw.githubusercontent.com/harbor-framework/terminal-bench-3/main/rubrics/trial-analysis.toml
+
+- Terminal-Bench 3 trial analysis job prompt
+  https://raw.githubusercontent.com/harbor-framework/terminal-bench-3/main/rubrics/trial-analysis-job.txt
+
+- Harbor documentation
+  https://www.harborframework.com/docs
+
+- Harbor run evaluations documentation
+  https://www.harborframework.com/docs/run-jobs/run-evals
+
+## Agent Reward Hacking / Benchmark Security
+
+- Cheating Agents / DebugML
+  https://debugml.github.io/cheating-agents/
+
+- BenchFlow AI — Awesome Evals
+  https://github.com/benchflow-ai/awesome-evals
+
+These references motivated:
+- separate verifier mode
+- keeping hidden fixtures out of `/app`
+- anti-cheat checks for `/tests`, `/solution`, hidden expected outputs, reward
+  files, and public solution fetches
+- distinguishing valid model failures from infra/provider failures
+
+## Agent Failure Modes and Task Difficulty
+
+- LLMs Have Made Failure Worth Publishing
+  https://arxiv.org/html/2604.06236v1
+
+- arXiv:2602.10046
+  https://arxiv.org/pdf/2602.10046
+
+- arXiv:2503.16416
+  https://arxiv.org/abs/2503.16416
+
+- arXiv:2504.00255
+  https://arxiv.org/pdf/2504.00255
+
+- arXiv:2404.12272
+  https://arxiv.org/abs/2404.12272
+
+- Hugging Face paper page: 2602.12670
+  https://huggingface.co/papers/2602.12670
+
+These references informed the design emphasis on:
+- compositional debugging difficulty
+- multi-hop localization between cause and symptom
+- anchoring on misleading local diagnostics
+- confirmation bias around familiar formulas or conventions
+- documenting negative results instead of hiding solved candidates
+
+## Physics / Thermal Modeling Context
+
+- Thermal Conductivity Estimation of Thermoelectric Materials with Uncertainty
+  Quantification Using Bayesian Physics-Informed Neural Networks
+  https://arxiv.org/abs/2510.16723
+
+This paper motivated the broader thermal-materials context, especially:
+- temperature-dependent material properties
+- calibration-driven scientific computing workflows
+- the distinction between simple textbook conduction and harder engineering
+  calibration tasks
+
+Important caveat: the submitted task is not a full PINN or coupled
+thermoelectric-transport benchmark. The paper is cited only as domain
+motivation, not as a direct specification.
+
+## Task-Specific Lessons Learned
+
+### Thermal Contact Stack v1.1
+
+The first thermal candidate was validated with oracle/nop and audit checks, but
+Claude Code solved it cleanly. The lesson was that publishing the complete
+finite-volume formula contract made the task fair but also made the repair path
+too direct.
+
+### Thermal Stack Calibration (v2)
+
+The later calibration-driven task shifted toward calibration artifacts,
+engineering notes, state/order coupling, and public/hidden generalization.
+A post-fix Codex gatekeeper run recorded reward 0.0, suggesting the task became
+harder, but the full required trial matrix was not completed.
+
+## Additional References To Verify
+
+The design discussion also considered literature on:
+- compositional reasoning failures in LLMs
+- irrelevant context distraction
+- anchoring and confirmation bias in security analysis
+- order sensitivity in tool use and threat-intelligence workflows
+- ARC-AGI-style "local success, wrong world model" failures
+
+These were used as conceptual framing during task design. Exact bibliographic
+entries should be verified before being cited formally.

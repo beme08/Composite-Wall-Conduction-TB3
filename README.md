@@ -66,3 +66,8 @@ rerun `tests/test.sh` for oracle. Expected rewards: nop `0.0`, oracle `1.0`.
 For Docker validation, build the two local images and run the separate verifier
 against an extracted `/app`. Expected rewards: Docker nop `0.0`, Docker oracle
 `1.0`.
+
+## References
+
+See [`docs/references.md`](docs/references.md) for the papers, benchmark docs,
+and articles that informed the task design and failure analysis.
