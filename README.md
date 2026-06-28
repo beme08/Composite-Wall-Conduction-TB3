@@ -1,7 +1,9 @@
 # Thermal Stack Calibration TB3 Task
 
-A **Terminal-Bench 3 (TB3)** compatible task built as a coding assignment for a
-**Y Combinator AI company**. Task name `thermal-stack-calibration`, expected
+A **Terminal-Bench 3 (TB3)** compatible task built as a coding assignment that i spent a week doing for a
+**Y Combinator AI company**. 
+
+Task name `thermal-stack-calibration`, expected
 package name `beme08/thermal-stack-calibration`.
 
 The task asks an agent to repair a legacy electronics-cooling thermal-stack
