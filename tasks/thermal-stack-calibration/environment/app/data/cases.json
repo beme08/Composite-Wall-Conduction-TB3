@@ -1,0 +1,41 @@
+{
+  "cases": [
+    {
+      "case_id": "visible_constant_k_no_source",
+      "length_m": 0.08,
+      "num_cells": 16,
+      "area_m2": 1.0,
+      "t_left_c": 80.0,
+      "t_inf_c": 22.0,
+      "h_w_m2_k": 18.0,
+      "facility": {"city": "Austin", "region": "TX", "country": "US", "installed_on": "01/04/2026", "measured_on": "02/04/2026"},
+      "layers": [{"name": "plate", "x_start_m": 0.0, "x_end_m": 0.08, "material_id": "flat_ceramic", "q_w_m3": 0.0}]
+    },
+    {
+      "case_id": "visible_weak_temp_coeff",
+      "length_m": 0.1,
+      "num_cells": 20,
+      "area_m2": 1.0,
+      "t_left_c": 86.0,
+      "t_inf_c": 23.0,
+      "h_w_m2_k": 15.0,
+      "facility": {"city": "Phoenix", "region": "AZ", "country": "US", "installed_on": "02/01/2026", "measured_on": "03/20/2026"},
+      "layers": [{"name": "cover", "x_start_m": 0.0, "x_end_m": 0.1, "material_id": "weak_plate", "q_w_m3": 0.0}]
+    },
+    {
+      "case_id": "visible_contact",
+      "length_m": 0.1,
+      "num_cells": 20,
+      "area_m2": 1.0,
+      "t_left_c": 92.0,
+      "t_inf_c": 25.0,
+      "h_w_m2_k": 35.0,
+      "facility": {"city": "Berlin", "region": "BE", "country": "DE", "installed_on": "04/01/2026", "measured_on": "25/06/2026"},
+      "layers": [
+        {"name": "tim", "x_start_m": 0.0, "x_end_m": 0.04, "material_id": "berlin_tim", "q_w_m3": 3000.0},
+        {"name": "sink", "x_start_m": 0.04, "x_end_m": 0.1, "material_id": "berlin_sink", "q_w_m3": 0.0}
+      ],
+      "contacts": [{"x_m": 0.04, "r_contact_m2_k_w": 0.006}]
+    }
+  ]
+}

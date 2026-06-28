@@ -1,0 +1,124 @@
+{
+  "cases": [
+    {
+      "case_id": "h001_constant_k_no_source",
+      "length_m": 0.08,
+      "num_cells": 16,
+      "area_m2": 0.42,
+      "t_left_c": 42.0,
+      "t_inf_c": 24.0,
+      "h_w_m2_k": 12.0,
+      "facility": {"city": "Austin", "region": "TX", "country": "US", "installed_on": "01/05/2026", "measured_on": "03/05/2026"},
+      "layers": [
+        {"name": "alumina", "x_start_m": 0.0, "x_end_m": 0.08, "material_id": "flat_ceramic", "q_w_m3": 0.0}
+      ]
+    },
+    {
+      "case_id": "h002_paris_texas_ambiguous_date",
+      "length_m": 0.09,
+      "num_cells": 18,
+      "area_m2": 0.31,
+      "t_left_c": 86.0,
+      "t_inf_c": 26.0,
+      "h_w_m2_k": 22.0,
+      "facility": {"city": "Paris", "region": "TX", "country": "US", "installed_on": "04/01/2026", "measured_on": "06/25/2026"},
+      "layers": [
+        {"name": "polymer", "x_start_m": 0.0, "x_end_m": 0.09, "material_id": "paris_tx_polymer", "q_w_m3": 1600.0}
+      ]
+    },
+    {
+      "case_id": "h003_berlin_ambiguous_date_contact",
+      "length_m": 0.1,
+      "num_cells": 20,
+      "area_m2": 0.22,
+      "t_left_c": 105.0,
+      "t_inf_c": 21.0,
+      "h_w_m2_k": 42.0,
+      "facility": {"city": "Berlin", "region": "BE", "country": "DE", "installed_on": "04/01/2026", "measured_on": "25/06/2026"},
+      "layers": [
+        {"name": "tim", "x_start_m": 0.0, "x_end_m": 0.04, "material_id": "berlin_tim", "q_w_m3": 3000.0},
+        {"name": "sink", "x_start_m": 0.04, "x_end_m": 0.1, "material_id": "berlin_sink", "q_w_m3": 0.0}
+      ],
+      "contacts": [
+        {"x_m": 0.04, "r_contact_m2_k_w": 0.012}
+      ]
+    },
+    {
+      "case_id": "h004_decimal_comma_material_case",
+      "length_m": "0,10",
+      "num_cells": 20,
+      "area_m2": "0,24",
+      "t_left_c": "92,5",
+      "t_inf_c": "24,0",
+      "h_w_m2_k": "26,0",
+      "facility": {"city": "Paris", "region": "IDF", "country": "FR", "installed_on": "05/04/2026", "measured_on": "18/06/2026"},
+      "layers": [
+        {"name": "euro_lid", "x_start_m": "0,0", "x_end_m": "0,04", "material_id": "berlin_tim", "q_w_m3": "1800,0"},
+        {"name": "euro_sink", "x_start_m": "0,04", "x_end_m": "0,10", "material_id": "berlin_sink", "q_w_m3": "0,0"}
+      ],
+      "contacts": [
+        {"x_m": "0,04", "r_contact_m2_k_w": "0,009"}
+      ]
+    },
+    {
+      "case_id": "h005_kelvin_input_metric_mm",
+      "length_m": "80",
+      "length_unit": "mm",
+      "num_cells": 16,
+      "area_m2": "0,30",
+      "temperature_unit": "K",
+      "t_left_c": "360,15",
+      "t_inf_c": "294,15",
+      "h_w_m2_k": "18,0",
+      "facility": {"city": "Milan", "region": "MI", "country": "IT", "installed_on": "11/02/2026", "measured_on": "18/04/2026"},
+      "layers": [
+        {"name": "metric_plate", "x_start_m": "0", "x_end_m": "80", "material_id": "italy_metric", "q_w_m3": "0,0"}
+      ]
+    },
+    {
+      "case_id": "h006_repeat_base_first",
+      "length_m": 0.09,
+      "num_cells": 18,
+      "area_m2": 0.16,
+      "t_left_c": 94.0,
+      "t_inf_c": 19.0,
+      "h_w_m2_k": 28.0,
+      "facility": {"city": "Austin", "region": "TX", "country": "US", "installed_on": "01/10/2026", "measured_on": "03/20/2026"},
+      "layers": [
+        {"name": "cache_left", "x_start_m": 0.0, "x_end_m": 0.03, "material_id": "cache_left_mat", "q_w_m3": 0.0},
+        {"name": "cache_right", "x_start_m": 0.03, "x_end_m": 0.09, "material_id": "cache_right_mat", "q_w_m3": 0.0}
+      ],
+      "contacts": [{"x_m": 0.03, "r_contact_m2_k_w": 0.004}]
+    },
+    {
+      "case_id": "h007_same_geometry_changed_regime",
+      "length_m": 0.09,
+      "num_cells": 18,
+      "area_m2": 0.41,
+      "t_left_c": 94.0,
+      "t_inf_c": 19.0,
+      "h_w_m2_k": 75.0,
+      "facility": {"city": "Austin", "region": "TX", "country": "US", "installed_on": "01/10/2026", "measured_on": "06/20/2026"},
+      "layers": [
+        {"name": "cache_left", "x_start_m": 0.0, "x_end_m": 0.03, "material_id": "cache_hot_left", "q_w_m3": 6500.0},
+        {"name": "cache_right", "x_start_m": 0.03, "x_end_m": 0.09, "material_id": "cache_hot_right", "q_w_m3": 1200.0}
+      ],
+      "contacts": [{"x_m": 0.03, "r_contact_m2_k_w": 0.026}]
+    },
+    {
+      "case_id": "h008_repeat_base_after_regime",
+      "length_m": 0.09,
+      "num_cells": 18,
+      "area_m2": 0.16,
+      "t_left_c": 94.0,
+      "t_inf_c": 19.0,
+      "h_w_m2_k": 28.0,
+      "facility": {"city": "Austin", "region": "TX", "country": "US", "installed_on": "01/10/2026", "measured_on": "03/20/2026"},
+      "layers": [
+        {"name": "cache_left", "x_start_m": 0.0, "x_end_m": 0.03, "material_id": "cache_left_mat", "q_w_m3": 0.0},
+        {"name": "cache_right", "x_start_m": 0.03, "x_end_m": 0.09, "material_id": "cache_right_mat", "q_w_m3": 0.0}
+      ],
+      "contacts": [{"x_m": 0.03, "r_contact_m2_k_w": 0.004}]
+    }
+  ]
+}

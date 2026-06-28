@@ -1009,5 +1009,5 @@
     "SOURCE_SCALING_SIGN": 0.0
   },
   "states_evaluated": 256,
-  "task": "thermal-contact-stack"
+  "task": "thermal-stack-calibration"
 }

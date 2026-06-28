@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .materials import effective_conductivity
 from .models import Case, Layer
 
 
@@ -22,6 +23,9 @@ class Mesh:
     q_w_m3: list[float]
     face_contact_r: list[float]
     interfaces: list[Interface]
+
+
+_MESH_CACHE: dict[tuple[float, int, tuple[tuple[str, float, float], ...]], Mesh] = {}
 
 
 def _is_aligned(x_m: float, dx_m: float, length_m: float) -> bool:
@@ -47,6 +51,8 @@ def validate_case(case: Case) -> None:
         raise ValueError("length_m must be positive")
     if case.num_cells < 4:
         raise ValueError("num_cells must be at least 4")
+    if case.area_m2 <= 0.0:
+        raise ValueError("area_m2 must be positive")
     if not (0.0 < case.h_w_m2_k <= 10000.0):
         raise ValueError("h_w_m2_k must be in (0, 10000]")
     if not case.layers:
@@ -55,7 +61,8 @@ def validate_case(case: Case) -> None:
     previous_end = 0.0
     internal_boundaries: set[int] = set()
     for index, layer in enumerate(case.layers):
-        if layer.k_w_m_k <= 0.0:
+        k_value = effective_conductivity(layer.material, case.t_left_c, case.t_inf_c)
+        if k_value <= 0.0:
             raise ValueError("layer conductivity must be positive")
         if layer.q_w_m3 < 0.0:
             raise ValueError("volumetric heat generation must be non-negative")
@@ -82,8 +89,20 @@ def validate_case(case: Case) -> None:
             raise ValueError("contact interface must be on an internal layer boundary")
 
 
+def _cache_key(case: Case) -> tuple[float, int, tuple[tuple[str, float, float], ...]]:
+    return (
+        case.length_m,
+        case.num_cells,
+        tuple((layer.name, layer.x_start_m, layer.x_end_m) for layer in case.layers),
+    )
+
+
 def build_mesh(case: Case) -> Mesh:
     validate_case(case)
+    key = _cache_key(case)
+    cached = _MESH_CACHE.get(key)
+    if cached is not None:
+        return cached
     dx_m = case.length_m / case.num_cells
     x_m = [(i + 0.5) * dx_m for i in range(case.num_cells)]
     k_values: list[float] = []
@@ -91,7 +110,7 @@ def build_mesh(case: Case) -> Mesh:
     for i in range(case.num_cells):
         x_probe = min((i + 1) * dx_m, case.length_m)
         layer = _layer_at_x(case.layers, x_probe)
-        k_values.append(layer.k_w_m_k)
+        k_values.append(effective_conductivity(layer.material, case.t_left_c, case.t_inf_c))
         q_values.append(layer.q_w_m3)
     contact_by_face = {_face_index(contact.x_m, dx_m): contact.r_contact_m2_k_w for contact in case.contacts}
     face_contact_r = [0.0 for _ in range(case.num_cells - 1)]
@@ -101,4 +120,6 @@ def build_mesh(case: Case) -> Mesh:
         r_contact = contact_by_face.get(face, 0.0)
         face_contact_r[face - 1] = r_contact
         interfaces.append(Interface(layer.x_end_m, face, r_contact))
-    return Mesh(dx_m, x_m, k_values, q_values, face_contact_r, interfaces)
+    mesh = Mesh(dx_m, x_m, k_values, q_values, face_contact_r, interfaces)
+    _MESH_CACHE[key] = mesh
+    return mesh

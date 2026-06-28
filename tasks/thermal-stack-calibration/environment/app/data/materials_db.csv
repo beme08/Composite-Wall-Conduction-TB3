@@ -1,0 +1,12 @@
+material_id;facility_city;facility_region;facility_country;certified_on;k_ref_w_m_k;temp_coeff_per_k;reference_temp_k;calibration_offsets_c
+flat_ceramic;Austin;TX;US;01/15/2026;2,40;0,00000;293,15;0.0,0.2,-0.2
+weak_plate;Phoenix;AZ;US;02/01/2026;1,20;0,00005;293,15;0.0,0.1,-0.1
+paris_tx_polymer;Paris;TX;US;04/01/2026;0,72;0,00120;298,15;0.0,1.5,-0.5
+berlin_tim;Berlin;BE;DE;04/01/2026;1,55;0,00080;295,15;0.0,0.4,-0.2
+berlin_sink;Berlin;BE;DE;25/06/2026;4,80;-0,00015;300,15;0.0,-0.3,0.1
+italy_metric;Milan;MI;IT;11/02/2026;0,95;0,00160;293,15;0.0,2.0,-1.0
+copper_hot;Austin;TX;US;03/10/2026;8,00;-0,00020;293,15;0.0,-0.2,0.2
+cache_left_mat;Austin;TX;US;01/10/2026;1,15;0,00030;293,15;0.0,0.3,-0.1
+cache_right_mat;Austin;TX;US;01/10/2026;0,36;0,00090;293,15;0.0,0.2,-0.2
+cache_hot_left;Austin;TX;US;05/20/2026;0,48;0,00140;293,15;0.0,1.2,-0.4
+cache_hot_right;Austin;TX;US;05/20/2026;5,60;-0,00030;293,15;0.0,-0.4,0.2

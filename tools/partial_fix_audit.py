@@ -17,7 +17,7 @@ from typing import Any
 sys.dont_write_bytecode = True
 
 ROOT = Path(__file__).resolve().parents[1]
-TASK_DIR = ROOT / "tasks" / "thermal-contact-stack"
+TASK_DIR = ROOT / "tasks" / "thermal-stack-calibration"
 APP_TEMPLATE = TASK_DIR / "environment" / "app"
 HIDDEN_CASES = TASK_DIR / "tests" / "fixtures" / "hidden_cases.json"
 DEFAULT_REPORT = TASK_DIR / "tests" / "fixtures" / "audit_report.json"
@@ -186,7 +186,7 @@ def apply_fixes(app_dir: Path, fixed_classes: list[str]) -> None:
 
 
 def run_variant(fixed_classes: list[str]) -> tuple[int, dict[str, Any] | None, str]:
-    with tempfile.TemporaryDirectory(prefix="tcs-audit-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="tscal-audit-") as tmp:
         tmp_path = Path(tmp)
         app_dir = tmp_path / "app"
         shutil.copytree(APP_TEMPLATE, app_dir)
@@ -567,7 +567,7 @@ def build_report() -> dict[str, Any]:
 
     case_report = case_differentiation_report(expected)
     return {
-        "task": "thermal-contact-stack",
+        "task": "thermal-stack-calibration",
         "defect_classes": DEFECT_CLASSES,
         "states_evaluated": 1 << len(DEFECT_CLASSES),
         "passing_masks": passing_masks,
