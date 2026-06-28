@@ -1,1013 +1,240 @@
 {
-  "all_but_one_failure_signatures": {
-    "CONTACT_RESISTANCE_OMITTED": "h006_two_layers_high_contact.interface_diagnostics.contact_delta_t_c",
-    "CONTACT_TEMPERATURE_CONTINUITY": "h006_two_layers_high_contact.interface_diagnostics.contact_delta_t_c",
-    "FLUX_AND_RESIDUAL": "h002_single_layer_uniform_source.energy_residual_w_m2",
-    "INTERFACE_CONDUCTANCE": "h005_entangled_high_contrast_contact.interface_diagnostics.contact_delta_t_c",
-    "LAYER_FACE_ASSIGNMENT": "h005_entangled_high_contrast_contact.temperature_c",
-    "LEFT_BOUNDARY_RESISTANCE": "h005_entangled_high_contrast_contact.temperature_c",
-    "RIGHT_CONVECTION_RESISTANCE": "h011_strong_convection_contact_stack.temperature_c",
-    "SOURCE_SCALING_SIGN": "h002_single_layer_uniform_source.energy_residual_w_m2"
-  },
-  "all_but_one_rewards": {
-    "CONTACT_RESISTANCE_OMITTED": 0.0,
-    "CONTACT_TEMPERATURE_CONTINUITY": 0.0,
-    "FLUX_AND_RESIDUAL": 0.0,
-    "INTERFACE_CONDUCTANCE": 0.0,
-    "LAYER_FACE_ASSIGNMENT": 0.0,
-    "LEFT_BOUNDARY_RESISTANCE": 0.0,
-    "RIGHT_CONVECTION_RESISTANCE": 0.0,
-    "SOURCE_SCALING_SIGN": 0.0
-  },
   "all_fixed_reward": 1.0,
-  "case_differentiation": {
-    "defect_coverage": {
-      "CONTACT_RESISTANCE_OMITTED": {
-        "case_signal_margins": [
-          {
-            "case_id": "h006_two_layers_high_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 44150.943396
-          },
-          {
-            "case_id": "h007_three_layers_two_contacts",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 6414.736325
-          },
-          {
-            "case_id": "h008_source_left_of_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 6217.34104
-          },
-          {
-            "case_id": "h005_entangled_high_contrast_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 4667.057444
-          },
-          {
-            "case_id": "h010_source_both_sides_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 3379.703535
-          }
-        ],
-        "defect_name": "CONTACT_RESISTANCE_OMITTED",
-        "detected": true,
-        "detecting_case_ids": [
-          "h005_entangled_high_contrast_contact",
-          "h006_two_layers_high_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "field_signal_margins": {
-          "interface_diagnostics.contact_delta_t_c": 44150.943396,
-          "interface_diagnostics.heat_flux_w_m2": 34856.007944,
-          "interface_diagnostics.temperature_left_c": 13942.403178,
-          "interface_diagnostics.temperature_right_c": 30208.540218,
-          "left_heat_flux_w_m2": 34856.007944,
-          "max_temperature_c": 871.400199,
-          "right_heat_flux_w_m2": 34856.007944,
-          "temperature_c": 29918.073486
-        },
-        "max_abs_contact_delta_t_error": 22.075471698113255,
-        "max_abs_energy_residual_error": 1.3031353773840237e-10,
-        "max_abs_flux_error": 348.56007944389376,
-        "max_abs_interface_temperature_error": 15.104270109235394,
-        "max_abs_temperature_error": 14.959036742800428,
-        "output_fields_responsible": [
-          "interface_diagnostics.contact_delta_t_c",
-          "interface_diagnostics.heat_flux_w_m2",
-          "interface_diagnostics.temperature_left_c",
-          "interface_diagnostics.temperature_right_c",
-          "left_heat_flux_w_m2",
-          "max_temperature_c",
-          "right_heat_flux_w_m2",
-          "temperature_c"
-        ],
-        "signal_margin_vs_tolerance": 44150.94339622651,
-        "target_hidden_cases": [
-          "h005_entangled_high_contrast_contact",
-          "h006_two_layers_high_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "verifier_passes_with_defect": false
-      },
-      "CONTACT_TEMPERATURE_CONTINUITY": {
-        "case_signal_margins": [
-          {
-            "case_id": "h006_two_layers_high_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c"
-            ],
-            "signal_margin_vs_tolerance": 44150.943396
-          },
-          {
-            "case_id": "h005_entangled_high_contrast_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c"
-            ],
-            "signal_margin_vs_tolerance": 7158.585507
-          },
-          {
-            "case_id": "h007_three_layers_two_contacts",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c"
-            ],
-            "signal_margin_vs_tolerance": 6414.736325
-          },
-          {
-            "case_id": "h008_source_left_of_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c"
-            ],
-            "signal_margin_vs_tolerance": 6217.34104
-          },
-          {
-            "case_id": "h003_two_layers_no_contact_high_contrast",
-            "output_fields": [
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c"
-            ],
-            "signal_margin_vs_tolerance": 4039.391497
-          }
-        ],
-        "defect_name": "CONTACT_TEMPERATURE_CONTINUITY",
-        "detected": true,
-        "detecting_case_ids": [
-          "h003_two_layers_no_contact_high_contrast",
-          "h004_two_layers_reversed_high_contrast",
-          "h005_entangled_high_contrast_contact",
-          "h006_two_layers_high_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "field_signal_margins": {
-          "interface_diagnostics.contact_delta_t_c": 44150.943396,
-          "interface_diagnostics.temperature_left_c": 21339.622642,
-          "interface_diagnostics.temperature_right_c": 22811.320755
-        },
-        "max_abs_contact_delta_t_error": 22.075471698113255,
-        "max_abs_energy_residual_error": 2.0236257114447653e-11,
-        "max_abs_flux_error": 1.1709744285326451e-11,
-        "max_abs_interface_temperature_error": 11.405660377358522,
-        "max_abs_temperature_error": 7.318590178329032e-13,
-        "output_fields_responsible": [
-          "interface_diagnostics.contact_delta_t_c",
-          "interface_diagnostics.temperature_left_c",
-          "interface_diagnostics.temperature_right_c"
-        ],
-        "signal_margin_vs_tolerance": 44150.94339622651,
-        "target_hidden_cases": [
-          "h003_two_layers_no_contact_high_contrast",
-          "h004_two_layers_reversed_high_contrast",
-          "h005_entangled_high_contrast_contact",
-          "h006_two_layers_high_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "verifier_passes_with_defect": false
-      },
-      "FLUX_AND_RESIDUAL": {
-        "case_signal_margins": [
-          {
-            "case_id": "h002_single_layer_uniform_source",
-            "output_fields": [
-              "energy_residual_w_m2",
-              "left_heat_flux_w_m2",
-              "right_heat_flux_w_m2"
-            ],
-            "signal_margin_vs_tolerance": 52776600.0
-          },
-          {
-            "case_id": "h010_source_both_sides_contact",
-            "output_fields": [
-              "energy_residual_w_m2",
-              "left_heat_flux_w_m2",
-              "right_heat_flux_w_m2"
-            ],
-            "signal_margin_vs_tolerance": 14342202.964652
-          },
-          {
-            "case_id": "h009_source_right_of_contact",
-            "output_fields": [
-              "energy_residual_w_m2",
-              "left_heat_flux_w_m2",
-              "right_heat_flux_w_m2"
-            ],
-            "signal_margin_vs_tolerance": 12026566.473988
-          },
-          {
-            "case_id": "h011_strong_convection_contact_stack",
-            "output_fields": [
-              "energy_residual_w_m2",
-              "left_heat_flux_w_m2",
-              "right_heat_flux_w_m2"
-            ],
-            "signal_margin_vs_tolerance": 8355479.757085
-          },
-          {
-            "case_id": "h012_weak_convection_fine_mesh",
-            "output_fields": [
-              "energy_residual_w_m2",
-              "left_heat_flux_w_m2",
-              "right_heat_flux_w_m2"
-            ],
-            "signal_margin_vs_tolerance": 8090566.557264
-          }
-        ],
-        "defect_name": "FLUX_AND_RESIDUAL",
-        "detected": true,
-        "detecting_case_ids": [
-          "h001_single_layer_no_source_convection",
-          "h002_single_layer_uniform_source",
-          "h003_two_layers_no_contact_high_contrast",
-          "h004_two_layers_reversed_high_contrast",
-          "h005_entangled_high_contrast_contact",
-          "h006_two_layers_high_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "field_signal_margins": {
-          "energy_residual_w_m2": 52776600.0,
-          "left_heat_flux_w_m2": 176603.773585,
-          "right_heat_flux_w_m2": 176603.773585
-        },
-        "max_abs_contact_delta_t_error": 5.684341886080802e-14,
-        "max_abs_energy_residual_error": 527766.0,
-        "max_abs_flux_error": 1766.03773584906,
-        "max_abs_interface_temperature_error": 7.247535904753022e-13,
-        "max_abs_temperature_error": 7.318590178329032e-13,
-        "output_fields_responsible": [
-          "energy_residual_w_m2",
-          "left_heat_flux_w_m2",
-          "right_heat_flux_w_m2"
-        ],
-        "signal_margin_vs_tolerance": 52776600.0,
-        "target_hidden_cases": [
-          "h001_single_layer_no_source_convection",
-          "h002_single_layer_uniform_source",
-          "h003_two_layers_no_contact_high_contrast",
-          "h004_two_layers_reversed_high_contrast",
-          "h005_entangled_high_contrast_contact",
-          "h006_two_layers_high_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "verifier_passes_with_defect": false
-      },
-      "INTERFACE_CONDUCTANCE": {
-        "case_signal_margins": [
-          {
-            "case_id": "h005_entangled_high_contrast_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 9800.650045
-          },
-          {
-            "case_id": "h003_two_layers_no_contact_high_contrast",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 8283.213597
-          },
-          {
-            "case_id": "h004_two_layers_reversed_high_contrast",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 6021.615074
-          },
-          {
-            "case_id": "h007_three_layers_two_contacts",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 4564.468733
-          },
-          {
-            "case_id": "h008_source_left_of_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 1828.87563
-          }
-        ],
-        "defect_name": "INTERFACE_CONDUCTANCE",
-        "detected": true,
-        "detecting_case_ids": [
-          "h003_two_layers_no_contact_high_contrast",
-          "h004_two_layers_reversed_high_contrast",
-          "h005_entangled_high_contrast_contact",
-          "h006_two_layers_high_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "field_signal_margins": {
-          "interface_diagnostics.contact_delta_t_c": 9800.650045,
-          "interface_diagnostics.heat_flux_w_m2": 1437.858628,
-          "interface_diagnostics.temperature_left_c": 9457.804628,
-          "interface_diagnostics.temperature_right_c": 5981.441215,
-          "left_heat_flux_w_m2": 1437.858628,
-          "max_temperature_c": 591.112789,
-          "right_heat_flux_w_m2": 1437.858628,
-          "temperature_c": 8866.691838
-        },
-        "max_abs_contact_delta_t_error": 4.900325022625026,
-        "max_abs_energy_residual_error": 4.192202140984591e-11,
-        "max_abs_flux_error": 14.37858628038839,
-        "max_abs_interface_temperature_error": 4.728902313752073,
-        "max_abs_temperature_error": 4.4333459191425675,
-        "output_fields_responsible": [
-          "interface_diagnostics.contact_delta_t_c",
-          "interface_diagnostics.heat_flux_w_m2",
-          "interface_diagnostics.temperature_left_c",
-          "interface_diagnostics.temperature_right_c",
-          "left_heat_flux_w_m2",
-          "max_temperature_c",
-          "right_heat_flux_w_m2",
-          "temperature_c"
-        ],
-        "signal_margin_vs_tolerance": 9800.650045250051,
-        "target_hidden_cases": [
-          "h003_two_layers_no_contact_high_contrast",
-          "h004_two_layers_reversed_high_contrast",
-          "h005_entangled_high_contrast_contact",
-          "h006_two_layers_high_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "verifier_passes_with_defect": false
-      },
-      "LAYER_FACE_ASSIGNMENT": {
-        "case_signal_margins": [
-          {
-            "case_id": "h005_entangled_high_contrast_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 15684.72462
-          },
-          {
-            "case_id": "h003_two_layers_no_contact_high_contrast",
-            "output_fields": [
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 13680.728258
-          },
-          {
-            "case_id": "h004_two_layers_reversed_high_contrast",
-            "output_fields": [
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 11077.811516
-          },
-          {
-            "case_id": "h007_three_layers_two_contacts",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 10111.994621
-          },
-          {
-            "case_id": "h008_source_left_of_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 6003.681871
-          }
-        ],
-        "defect_name": "LAYER_FACE_ASSIGNMENT",
-        "detected": true,
-        "detecting_case_ids": [
-          "h003_two_layers_no_contact_high_contrast",
-          "h004_two_layers_reversed_high_contrast",
-          "h005_entangled_high_contrast_contact",
-          "h006_two_layers_high_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "field_signal_margins": {
-          "interface_diagnostics.contact_delta_t_c": 1079.128294,
-          "interface_diagnostics.heat_flux_w_m2": 3002.433914,
-          "interface_diagnostics.temperature_left_c": 11077.811516,
-          "interface_diagnostics.temperature_right_c": 11077.811516,
-          "left_heat_flux_w_m2": 4002.454581,
-          "max_temperature_c": 1733.238226,
-          "right_heat_flux_w_m2": 3002.433914,
-          "temperature_c": 15684.72462
-        },
-        "max_abs_contact_delta_t_error": 0.539564146831303,
-        "max_abs_energy_residual_error": 7.014477887423709e-11,
-        "max_abs_flux_error": 40.02454580717938,
-        "max_abs_interface_temperature_error": 5.5389057580452885,
-        "max_abs_temperature_error": 7.842362310014437,
-        "output_fields_responsible": [
-          "interface_diagnostics.contact_delta_t_c",
-          "interface_diagnostics.heat_flux_w_m2",
-          "interface_diagnostics.temperature_left_c",
-          "interface_diagnostics.temperature_right_c",
-          "left_heat_flux_w_m2",
-          "max_temperature_c",
-          "right_heat_flux_w_m2",
-          "temperature_c"
-        ],
-        "signal_margin_vs_tolerance": 15684.724620028874,
-        "target_hidden_cases": [
-          "h003_two_layers_no_contact_high_contrast",
-          "h004_two_layers_reversed_high_contrast",
-          "h005_entangled_high_contrast_contact",
-          "h006_two_layers_high_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "verifier_passes_with_defect": false
-      },
-      "LEFT_BOUNDARY_RESISTANCE": {
-        "case_signal_margins": [
-          {
-            "case_id": "h005_entangled_high_contrast_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 8646.288132
-          },
-          {
-            "case_id": "h003_two_layers_no_contact_high_contrast",
-            "output_fields": [
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 7452.566106
-          },
-          {
-            "case_id": "h006_two_layers_high_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 2145.941202
-          },
-          {
-            "case_id": "h002_single_layer_uniform_source",
-            "output_fields": [
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 1464.972621
-          },
-          {
-            "case_id": "h009_source_right_of_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 610.346171
-          }
-        ],
-        "defect_name": "LEFT_BOUNDARY_RESISTANCE",
-        "detected": true,
-        "detecting_case_ids": [
-          "h001_single_layer_no_source_convection",
-          "h002_single_layer_uniform_source",
-          "h003_two_layers_no_contact_high_contrast",
-          "h004_two_layers_reversed_high_contrast",
-          "h005_entangled_high_contrast_contact",
-          "h006_two_layers_high_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "field_signal_margins": {
-          "interface_diagnostics.contact_delta_t_c": 616.059675,
-          "interface_diagnostics.heat_flux_w_m2": 1232.119351,
-          "interface_diagnostics.temperature_left_c": 1683.896446,
-          "interface_diagnostics.temperature_right_c": 1067.836771,
-          "left_heat_flux_w_m2": 1232.119351,
-          "max_temperature_c": 8646.288132,
-          "right_heat_flux_w_m2": 1232.119351,
-          "temperature_c": 8646.288132
-        },
-        "max_abs_contact_delta_t_error": 0.3080298376481565,
-        "max_abs_energy_residual_error": 4.3854697651113383e-11,
-        "max_abs_flux_error": 12.321193505926317,
-        "max_abs_interface_temperature_error": 0.8419482229047475,
-        "max_abs_temperature_error": 4.323144065827265,
-        "output_fields_responsible": [
-          "interface_diagnostics.contact_delta_t_c",
-          "interface_diagnostics.heat_flux_w_m2",
-          "interface_diagnostics.temperature_left_c",
-          "interface_diagnostics.temperature_right_c",
-          "left_heat_flux_w_m2",
-          "max_temperature_c",
-          "right_heat_flux_w_m2",
-          "temperature_c"
-        ],
-        "signal_margin_vs_tolerance": 8646.28813165453,
-        "target_hidden_cases": [
-          "h001_single_layer_no_source_convection",
-          "h002_single_layer_uniform_source",
-          "h003_two_layers_no_contact_high_contrast",
-          "h004_two_layers_reversed_high_contrast",
-          "h005_entangled_high_contrast_contact",
-          "h006_two_layers_high_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "verifier_passes_with_defect": false
-      },
-      "RIGHT_CONVECTION_RESISTANCE": {
-        "case_signal_margins": [
-          {
-            "case_id": "h011_strong_convection_contact_stack",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 14382.112973
-          },
-          {
-            "case_id": "h004_two_layers_reversed_high_contrast",
-            "output_fields": [
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 5636.076712
-          },
-          {
-            "case_id": "h010_source_both_sides_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 1851.31112
-          },
-          {
-            "case_id": "h002_single_layer_uniform_source",
-            "output_fields": [
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 1501.250881
-          },
-          {
-            "case_id": "h009_source_right_of_contact",
-            "output_fields": [
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 1079.187154
-          }
-        ],
-        "defect_name": "RIGHT_CONVECTION_RESISTANCE",
-        "detected": true,
-        "detecting_case_ids": [
-          "h001_single_layer_no_source_convection",
-          "h002_single_layer_uniform_source",
-          "h003_two_layers_no_contact_high_contrast",
-          "h004_two_layers_reversed_high_contrast",
-          "h005_entangled_high_contrast_contact",
-          "h006_two_layers_high_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "field_signal_margins": {
-          "interface_diagnostics.contact_delta_t_c": 273.078094,
-          "interface_diagnostics.heat_flux_w_m2": 1706.73809,
-          "interface_diagnostics.temperature_left_c": 1119.583399,
-          "interface_diagnostics.temperature_right_c": 1297.120948,
-          "left_heat_flux_w_m2": 1706.73809,
-          "max_temperature_c": 606.888654,
-          "right_heat_flux_w_m2": 1706.73809,
-          "temperature_c": 14382.112973
-        },
-        "max_abs_contact_delta_t_error": 0.1365390472093253,
-        "max_abs_energy_residual_error": 2.064837190118851e-11,
-        "max_abs_flux_error": 17.067380901166654,
-        "max_abs_interface_temperature_error": 0.6485604742443201,
-        "max_abs_temperature_error": 7.1910564863581365,
-        "output_fields_responsible": [
-          "interface_diagnostics.contact_delta_t_c",
-          "interface_diagnostics.heat_flux_w_m2",
-          "interface_diagnostics.temperature_left_c",
-          "interface_diagnostics.temperature_right_c",
-          "left_heat_flux_w_m2",
-          "max_temperature_c",
-          "right_heat_flux_w_m2",
-          "temperature_c"
-        ],
-        "signal_margin_vs_tolerance": 14382.112972716273,
-        "target_hidden_cases": [
-          "h001_single_layer_no_source_convection",
-          "h002_single_layer_uniform_source",
-          "h003_two_layers_no_contact_high_contrast",
-          "h004_two_layers_reversed_high_contrast",
-          "h005_entangled_high_contrast_contact",
-          "h006_two_layers_high_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "verifier_passes_with_defect": false
-      },
-      "SOURCE_SCALING_SIGN": {
-        "case_signal_margins": [
-          {
-            "case_id": "h002_single_layer_uniform_source",
-            "output_fields": [
-              "energy_residual_w_m2",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 52932000.0
-          },
-          {
-            "case_id": "h010_source_both_sides_contact",
-            "output_fields": [
-              "energy_residual_w_m2",
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 14472000.0
-          },
-          {
-            "case_id": "h012_weak_convection_fine_mesh",
-            "output_fields": [
-              "energy_residual_w_m2",
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 14083791.96234
-          },
-          {
-            "case_id": "h009_source_right_of_contact",
-            "output_fields": [
-              "energy_residual_w_m2",
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 12160500.0
-          },
-          {
-            "case_id": "h011_strong_convection_contact_stack",
-            "output_fields": [
-              "energy_residual_w_m2",
-              "interface_diagnostics.contact_delta_t_c",
-              "interface_diagnostics.heat_flux_w_m2",
-              "interface_diagnostics.temperature_left_c",
-              "interface_diagnostics.temperature_right_c",
-              "left_heat_flux_w_m2",
-              "max_temperature_c",
-              "right_heat_flux_w_m2",
-              "temperature_c"
-            ],
-            "signal_margin_vs_tolerance": 10080272.064777
-          }
-        ],
-        "defect_name": "SOURCE_SCALING_SIGN",
-        "detected": true,
-        "detecting_case_ids": [
-          "h002_single_layer_uniform_source",
-          "h005_entangled_high_contrast_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "field_signal_margins": {
-          "energy_residual_w_m2": 52932000.0,
-          "interface_diagnostics.contact_delta_t_c": 702919.075145,
-          "interface_diagnostics.heat_flux_w_m2": 4393244.219653,
-          "interface_diagnostics.temperature_left_c": 13341078.718257,
-          "interface_diagnostics.temperature_right_c": 13970578.424596,
-          "left_heat_flux_w_m2": 34405800.0,
-          "max_temperature_c": 969116.666667,
-          "right_heat_flux_w_m2": 18526200.0,
-          "temperature_c": 14923883.333333
-        },
-        "max_abs_contact_delta_t_error": 351.4595375722568,
-        "max_abs_energy_residual_error": 529319.9999999993,
-        "max_abs_flux_error": 344057.9999999995,
-        "max_abs_interface_temperature_error": 6985.289212298217,
-        "max_abs_temperature_error": 7461.941666666658,
-        "output_fields_responsible": [
-          "energy_residual_w_m2",
-          "interface_diagnostics.contact_delta_t_c",
-          "interface_diagnostics.heat_flux_w_m2",
-          "interface_diagnostics.temperature_left_c",
-          "interface_diagnostics.temperature_right_c",
-          "left_heat_flux_w_m2",
-          "max_temperature_c",
-          "right_heat_flux_w_m2",
-          "temperature_c"
-        ],
-        "signal_margin_vs_tolerance": 52931999.999999925,
-        "target_hidden_cases": [
-          "h002_single_layer_uniform_source",
-          "h005_entangled_high_contrast_contact",
-          "h007_three_layers_two_contacts",
-          "h008_source_left_of_contact",
-          "h009_source_right_of_contact",
-          "h010_source_both_sides_contact",
-          "h011_strong_convection_contact_stack",
-          "h012_weak_convection_fine_mesh"
-        ],
-        "verifier_passes_with_defect": false
-      }
+  "cluster_states": [
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "0000",
+      "mutations": [],
+      "passes": false,
+      "reward": 0.0
     },
-    "mode": "case-differentiation",
-    "passed": true,
-    "redesign_required": false,
-    "tolerance_multiplier_required": 10.0,
-    "weak_cases": []
-  },
-  "defect_classes": [
-    "CONTACT_RESISTANCE_OMITTED",
-    "CONTACT_TEMPERATURE_CONTINUITY",
-    "INTERFACE_CONDUCTANCE",
-    "LEFT_BOUNDARY_RESISTANCE",
-    "RIGHT_CONVECTION_RESISTANCE",
-    "SOURCE_SCALING_SIGN",
-    "LAYER_FACE_ASSIGNMENT",
-    "FLUX_AND_RESIDUAL"
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "0001",
+      "mutations": [
+        "missing:B_local_validation_schema",
+        "missing:C_state_order_coupling",
+        "missing:D_area_contact_temperature"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "0010",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:C_state_order_coupling",
+        "missing:D_area_contact_temperature"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "0011",
+      "mutations": [
+        "missing:C_state_order_coupling",
+        "missing:D_area_contact_temperature"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "0100",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:B_local_validation_schema",
+        "missing:D_area_contact_temperature"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "0101",
+      "mutations": [
+        "missing:B_local_validation_schema",
+        "missing:D_area_contact_temperature"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "0110",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:D_area_contact_temperature"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "0111",
+      "mutations": [
+        "missing:D_area_contact_temperature"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "1000",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:B_local_validation_schema",
+        "missing:C_state_order_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "1001",
+      "mutations": [
+        "missing:B_local_validation_schema",
+        "missing:C_state_order_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "1010",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:C_state_order_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "1011",
+      "mutations": [
+        "missing:C_state_order_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "1100",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:B_local_validation_schema"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "1101",
+      "mutations": [
+        "missing:B_local_validation_schema"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "1110",
+      "mutations": [
+        "missing:A_facility_normalization"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "",
+      "mask": "1111",
+      "mutations": [],
+      "passes": true,
+      "reward": 1.0
+    }
   ],
-  "failure_signature_counts": {
-    "h002_single_layer_uniform_source.energy_residual_w_m2": 192,
-    "h005_entangled_high_contrast_contact.interface_diagnostics.contact_delta_t_c": 1,
-    "h005_entangled_high_contrast_contact.temperature_c": 10,
-    "h006_two_layers_high_contact.interface_diagnostics.contact_delta_t_c": 48,
-    "h011_strong_convection_contact_stack.temperature_c": 4
-  },
-  "failure_signature_mode": "strongest_output_field_signal_margin",
+  "clusters": [
+    "A_facility_normalization",
+    "B_local_validation_schema",
+    "C_state_order_coupling",
+    "D_area_contact_temperature"
+  ],
+  "mode": "cluster-audit",
   "nop_reward": 0.0,
+  "passed": true,
   "passing_masks": [
-    "0xff"
+    "1111"
   ],
-  "single_fix_failure_signatures": {
-    "CONTACT_RESISTANCE_OMITTED": "h002_single_layer_uniform_source.energy_residual_w_m2",
-    "CONTACT_TEMPERATURE_CONTINUITY": "h002_single_layer_uniform_source.energy_residual_w_m2",
-    "FLUX_AND_RESIDUAL": "h002_single_layer_uniform_source.energy_residual_w_m2",
-    "INTERFACE_CONDUCTANCE": "h002_single_layer_uniform_source.energy_residual_w_m2",
-    "LAYER_FACE_ASSIGNMENT": "h002_single_layer_uniform_source.energy_residual_w_m2",
-    "LEFT_BOUNDARY_RESISTANCE": "h002_single_layer_uniform_source.energy_residual_w_m2",
-    "RIGHT_CONVECTION_RESISTANCE": "h002_single_layer_uniform_source.energy_residual_w_m2",
-    "SOURCE_SCALING_SIGN": "h002_single_layer_uniform_source.energy_residual_w_m2"
+  "states_evaluated": 16,
+  "task": "thermal-stack-calibration",
+  "wrong_fix_probe_rewards": {
+    "all_T_to_K": 0.0,
+    "area_twice": 0.0,
+    "cache_unchanged": 0.0,
+    "dates_EU": 0.0,
+    "dates_US": 0.0,
+    "global_comma": 0.0,
+    "harmonic_only": 0.0,
+    "loose_convergence": 0.0,
+    "temp_coeff_uses_celsius": 0.0
   },
-  "single_fix_rewards": {
-    "CONTACT_RESISTANCE_OMITTED": 0.0,
-    "CONTACT_TEMPERATURE_CONTINUITY": 0.0,
-    "FLUX_AND_RESIDUAL": 0.0,
-    "INTERFACE_CONDUCTANCE": 0.0,
-    "LAYER_FACE_ASSIGNMENT": 0.0,
-    "LEFT_BOUNDARY_RESISTANCE": 0.0,
-    "RIGHT_CONVECTION_RESISTANCE": 0.0,
-    "SOURCE_SCALING_SIGN": 0.0
-  },
-  "states_evaluated": 256,
-  "task": "thermal-stack-calibration"
+  "wrong_fix_probes": {
+    "all_T_to_K": {
+      "failure_excerpt": "verifier reward 0.0",
+      "passes": false,
+      "probe": "all_T_to_K",
+      "reward": 0.0
+    },
+    "area_twice": {
+      "failure_excerpt": "verifier reward 0.0",
+      "passes": false,
+      "probe": "area_twice",
+      "reward": 0.0
+    },
+    "cache_unchanged": {
+      "failure_excerpt": "verifier reward 0.0",
+      "passes": false,
+      "probe": "cache_unchanged",
+      "reward": 0.0
+    },
+    "dates_EU": {
+      "failure_excerpt": "verifier reward 0.0",
+      "passes": false,
+      "probe": "dates_EU",
+      "reward": 0.0
+    },
+    "dates_US": {
+      "failure_excerpt": "verifier reward 0.0",
+      "passes": false,
+      "probe": "dates_US",
+      "reward": 0.0
+    },
+    "global_comma": {
+      "failure_excerpt": "verifier reward 0.0",
+      "passes": false,
+      "probe": "global_comma",
+      "reward": 0.0
+    },
+    "harmonic_only": {
+      "failure_excerpt": "verifier reward 0.0",
+      "passes": false,
+      "probe": "harmonic_only",
+      "reward": 0.0
+    },
+    "loose_convergence": {
+      "failure_excerpt": "verifier reward 0.0",
+      "passes": false,
+      "probe": "loose_convergence",
+      "reward": 0.0
+    },
+    "temp_coeff_uses_celsius": {
+      "failure_excerpt": "verifier reward 0.0",
+      "passes": false,
+      "probe": "temp_coeff_uses_celsius",
+      "reward": 0.0
+    }
+  }
 }

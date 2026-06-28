@@ -24,15 +24,12 @@ RESULT_KEYS = {
     "interface_diagnostics",
     "left_heat_flux_w_m2",
     "right_heat_flux_w_m2",
-    "left_heat_flow_w",
-    "right_heat_flow_w",
     "max_temperature_c",
-    "energy_residual_w",
+    "energy_residual_w_m2",
 }
 INTERFACE_KEYS = {
     "x_m",
     "heat_flux_w_m2",
-    "heat_flow_w",
     "temperature_left_c",
     "temperature_right_c",
     "contact_delta_t_c",
@@ -101,10 +98,8 @@ class SolverOutputTests(unittest.TestCase):
                 for field in (
                     "left_heat_flux_w_m2",
                     "right_heat_flux_w_m2",
-                    "left_heat_flow_w",
-                    "right_heat_flow_w",
                     "max_temperature_c",
-                    "energy_residual_w",
+                    "energy_residual_w_m2",
                 ):
                     self.assertTrue(_is_number(result[field]), field)
 
@@ -127,12 +122,6 @@ class SolverOutputTests(unittest.TestCase):
                         1e-3,
                     )
                     self.assert_close(
-                        a_item["heat_flow_w"],
-                        b_item["heat_flow_w"],
-                        f"{case_id}.interface[{i}].heat_flow_w",
-                        1e-5,
-                    )
-                    self.assert_close(
                         a_item["temperature_left_c"],
                         b_item["temperature_left_c"],
                         f"{case_id}.interface[{i}].temperature_left",
@@ -152,8 +141,6 @@ class SolverOutputTests(unittest.TestCase):
                     )
                 for field in ("left_heat_flux_w_m2", "right_heat_flux_w_m2"):
                     self.assert_close(result[field], expected[field], f"{case_id}.{field}", 1e-3)
-                for field in ("left_heat_flow_w", "right_heat_flow_w"):
-                    self.assert_close(result[field], expected[field], f"{case_id}.{field}", 1e-5)
                 self.assert_close(
                     result["max_temperature_c"],
                     expected["max_temperature_c"],
@@ -161,9 +148,9 @@ class SolverOutputTests(unittest.TestCase):
                     5e-4,
                 )
                 self.assert_close(
-                    result["energy_residual_w"],
-                    expected["energy_residual_w"],
-                    f"{case_id}.energy_residual_w",
+                    result["energy_residual_w_m2"],
+                    expected["energy_residual_w_m2"],
+                    f"{case_id}.energy_residual_w_m2",
                     1e-7,
                 )
 
@@ -176,8 +163,7 @@ class SolverOutputTests(unittest.TestCase):
     def test_repeated_cases_are_order_independent(self) -> None:
         by_id = {result["case_id"]: result for result in self.payload["results"]}
         pairs = [
-            ("h006_repeat_base_first", "h010_repeat_base_after_regime"),
-            ("h007_decimal_comma_eu", "h011_decimal_comma_eu_repeat"),
+            ("h006_repeat_base_first", "h008_repeat_base_after_regime"),
         ]
         for first, second in pairs:
             with self.subTest(first=first, second=second):
@@ -191,7 +177,7 @@ class SolverOutputTests(unittest.TestCase):
         probes = [
             case
             for case in self.cases
-            if case["case_id"] in {"h007_decimal_comma_eu", "h008_kelvin_radiation_metric_mm"}
+            if case["case_id"] in {"h004_decimal_comma_material_case", "h005_kelvin_input_metric_mm"}
         ]
         self.assertTrue(probes)
         for raw in probes:

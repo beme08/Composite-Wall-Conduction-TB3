@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
 APP_DIR="${APP_DIR:-/app}"
+
 python3 - "$APP_DIR" <<'PYSOLVE'
 from __future__ import annotations
 
@@ -10,16 +12,46 @@ from pathlib import Path
 app_dir = Path(sys.argv[1])
 
 FILES = {
-"thermal_stack/models.py": r'''"""Data models and JSON normalization for thermal-stack cases."""
+"thermal_stack/__init__.py": r'''"""Thermal stack calibration solver package."""
+
+from .io import load_cases, load_materials, write_results
+from .models import Case, Contact, Facility, Layer, Material
+from .solver import solve_case
+
+__all__ = [
+    "Case",
+    "Contact",
+    "Facility",
+    "Layer",
+    "Material",
+    "load_cases",
+    "load_materials",
+    "solve_case",
+    "write_results",
+]
+''',
+"thermal_stack/models.py": r'''"""Data models and normalization for thermal-stack calibration cases."""
 
 from __future__ import annotations
 
 import copy
+import csv
 from dataclasses import dataclass
 from datetime import date, datetime
+from pathlib import Path
 from typing import Any
 
 KELVIN_OFFSET = 273.15
+
+
+@dataclass(frozen=True)
+class Material:
+    material_id: str
+    certified_on: date
+    k_ref_w_m_k: float
+    temp_coeff_per_k: float
+    reference_temp_k: float
+    calibration_offsets_c: tuple[float, ...]
 
 
 @dataclass(frozen=True)
@@ -27,7 +59,7 @@ class Layer:
     name: str
     x_start_m: float
     x_end_m: float
-    k_w_m_k: float
+    material: Material
     q_w_m3: float = 0.0
 
 
@@ -40,6 +72,7 @@ class Contact:
 @dataclass(frozen=True)
 class Facility:
     city: str
+    region: str
     country: str
     installed_on: date
     measured_on: date
@@ -54,8 +87,6 @@ class Case:
     t_left_c: float
     t_inf_c: float
     h_w_m2_k: float
-    radiation_enabled: bool
-    emissivity: float
     facility: Facility
     service_age_days: int
     layers: tuple[Layer, ...]
@@ -68,27 +99,33 @@ def parse_scalar(value: Any) -> float:
     if not isinstance(value, str):
         raise TypeError(f"expected scalar, got {type(value).__name__}")
     text = value.strip().replace("\u00a0", "")
-    if "," in text and "." not in text:
-        if text.count(",") == 1 and all(part.strip("+-").isdigit() for part in text.split(",")):
-            text = text.replace(",", ".")
+    if "," in text and "." not in text and text.count(",") == 1:
+        left, right = text.split(",", 1)
+        if left.strip("+-").isdigit() and right.isdigit():
+            text = f"{left}.{right}"
     return float(text)
 
 
-def parse_bool(value: Any) -> bool:
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, str):
-        return value.strip().lower() in {"1", "true", "yes", "y"}
-    return bool(value)
+def parse_vector(value: Any) -> tuple[float, ...]:
+    if value is None:
+        return (0.0,)
+    if isinstance(value, (list, tuple)):
+        return tuple(parse_scalar(item) for item in value)
+    return tuple(float(part.strip()) for part in str(value).split(",") if part.strip())
 
 
 def parse_facility_date(value: Any, facility: dict[str, Any]) -> date:
     text = str(value).strip()
     if "-" in text:
         return datetime.strptime(text, "%Y-%m-%d").date()
-    country = str(facility.get("country", "")).strip().lower()
-    city = str(facility.get("city", "")).strip().lower()
-    us_context = country in {"us", "usa", "united states"} or city in {"austin", "phoenix", "boston"}
+    country = str(facility.get("country", facility.get("facility_country", ""))).strip().lower()
+    region = str(facility.get("region", facility.get("facility_region", ""))).strip().lower()
+    city = str(facility.get("city", facility.get("facility_city", ""))).strip().lower()
+    us_context = country in {"us", "usa", "united states"} or region in {"tx", "az"} or city in {
+        "austin",
+        "phoenix",
+        "boston",
+    }
     return datetime.strptime(text, "%m/%d/%Y" if us_context else "%d/%m/%Y").date()
 
 
@@ -99,33 +136,55 @@ def temperature_to_c(value: Any, unit: str) -> float:
     return number
 
 
+def material_from_dict(raw: dict[str, Any]) -> Material:
+    facility = {
+        "city": raw.get("facility_city", ""),
+        "region": raw.get("facility_region", ""),
+        "country": raw.get("facility_country", ""),
+    }
+    return Material(
+        material_id=str(raw["material_id"]),
+        certified_on=parse_facility_date(raw["certified_on"], facility),
+        k_ref_w_m_k=parse_scalar(raw["k_ref_w_m_k"]),
+        temp_coeff_per_k=parse_scalar(raw["temp_coeff_per_k"]),
+        reference_temp_k=parse_scalar(raw["reference_temp_k"]),
+        calibration_offsets_c=parse_vector(raw.get("calibration_offsets_c", "0")),
+    )
+
+
+def _load_default_materials() -> dict[str, Material]:
+    material_path = Path(__file__).resolve().parents[1] / "data" / "materials_db.csv"
+    with material_path.open(encoding="utf-8", newline="") as handle:
+        materials = [material_from_dict(dict(row)) for row in csv.DictReader(handle, delimiter=";")]
+    return {material.material_id: material for material in materials}
+
+
 def normalize_case_dict(raw_input: dict[str, Any]) -> dict[str, Any]:
     raw = copy.deepcopy(raw_input)
     raw.setdefault("area_m2", 1.0)
     raw.setdefault("temperature_unit", "C")
-    raw.setdefault("radiation_enabled", False)
-    raw.setdefault("emissivity", 0.0)
     raw.setdefault(
         "facility",
         {
             "city": "Austin",
+            "region": "TX",
             "country": "US",
-            "installed_on": "01/01/2024",
-            "measured_on": "01/02/2024",
+            "installed_on": "01/01/2026",
+            "measured_on": "01/02/2026",
         },
     )
+    unit_scale = 0.001 if str(raw.get("length_unit", "m")).lower() == "mm" else 1.0
     facility = copy.deepcopy(raw["facility"])
     installed = parse_facility_date(facility["installed_on"], facility)
     measured = parse_facility_date(facility["measured_on"], facility)
-    facility["installed_on"] = installed.isoformat()
-    facility["measured_on"] = measured.isoformat()
-    length_unit = str(raw.get("length_unit", "m")).lower()
-    unit_scale = 0.001 if length_unit == "mm" else 1.0
-    if "length_mm" in raw:
-        length_m = parse_scalar(raw["length_mm"]) / 1000.0
-        unit_scale = 0.001 if length_unit == "mm" else 1.0
-    else:
-        length_m = parse_scalar(raw["length_m"]) * unit_scale
+    normalized_facility = {
+        "city": str(facility.get("city", "")),
+        "region": str(facility.get("region", "")),
+        "country": str(facility.get("country", "")),
+        "installed_on": installed.isoformat(),
+        "measured_on": measured.isoformat(),
+    }
+    temp_unit = str(raw.get("temperature_unit", "C"))
     layers = []
     for layer in raw["layers"]:
         layers.append(
@@ -133,7 +192,7 @@ def normalize_case_dict(raw_input: dict[str, Any]) -> dict[str, Any]:
                 "name": str(layer["name"]),
                 "x_start_m": parse_scalar(layer["x_start_m"]) * unit_scale,
                 "x_end_m": parse_scalar(layer["x_end_m"]) * unit_scale,
-                "k_w_m_k": parse_scalar(layer["k_w_m_k"]),
+                "material_id": str(layer["material_id"]),
                 "q_w_m3": parse_scalar(layer.get("q_w_m3", 0.0)),
             }
         )
@@ -145,32 +204,39 @@ def normalize_case_dict(raw_input: dict[str, Any]) -> dict[str, Any]:
                 "r_contact_m2_k_w": parse_scalar(contact["r_contact_m2_k_w"]),
             }
         )
-    normalized = {
+    return {
         "case_id": str(raw["case_id"]),
-        "length_m": length_m,
+        "length_m": parse_scalar(raw["length_m"]) * unit_scale,
         "num_cells": int(raw["num_cells"]),
         "area_m2": parse_scalar(raw.get("area_m2", 1.0)),
-        "t_left_c": temperature_to_c(raw["t_left_c"], str(raw.get("temperature_unit", "C"))),
-        "t_inf_c": temperature_to_c(raw["t_inf_c"], str(raw.get("temperature_unit", "C"))),
+        "t_left_c": temperature_to_c(raw["t_left_c"], temp_unit),
+        "t_inf_c": temperature_to_c(raw["t_inf_c"], temp_unit),
         "h_w_m2_k": parse_scalar(raw["h_w_m2_k"]),
-        "radiation_enabled": parse_bool(raw.get("radiation_enabled", False)),
-        "emissivity": parse_scalar(raw.get("emissivity", 0.0)),
-        "facility": facility,
+        "facility": normalized_facility,
         "layers": layers,
         "contacts": contacts,
     }
-    if "sensor_offsets_c" in raw:
-        normalized["sensor_offsets_c"] = raw["sensor_offsets_c"]
-    return normalized
 
 
-def layer_from_dict(raw: dict[str, Any]) -> Layer:
+def facility_from_dict(raw: dict[str, Any]) -> Facility:
+    installed = parse_facility_date(raw["installed_on"], raw)
+    measured = parse_facility_date(raw["measured_on"], raw)
+    return Facility(
+        city=str(raw.get("city", "")),
+        region=str(raw.get("region", "")),
+        country=str(raw.get("country", "")),
+        installed_on=installed,
+        measured_on=measured,
+    )
+
+
+def layer_from_dict(raw: dict[str, Any], materials: dict[str, Material]) -> Layer:
     return Layer(
-        str(raw["name"]),
-        parse_scalar(raw["x_start_m"]),
-        parse_scalar(raw["x_end_m"]),
-        parse_scalar(raw["k_w_m_k"]),
-        parse_scalar(raw.get("q_w_m3", 0.0)),
+        name=str(raw["name"]),
+        x_start_m=parse_scalar(raw["x_start_m"]),
+        x_end_m=parse_scalar(raw["x_end_m"]),
+        material=materials[str(raw["material_id"])],
+        q_w_m3=parse_scalar(raw.get("q_w_m3", 0.0)),
     )
 
 
@@ -178,14 +244,9 @@ def contact_from_dict(raw: dict[str, Any]) -> Contact:
     return Contact(parse_scalar(raw["x_m"]), parse_scalar(raw["r_contact_m2_k_w"]))
 
 
-def facility_from_dict(raw: dict[str, Any]) -> Facility:
-    installed = parse_facility_date(raw["installed_on"], raw)
-    measured = parse_facility_date(raw["measured_on"], raw)
-    return Facility(str(raw.get("city", "")), str(raw.get("country", "")), installed, measured)
-
-
-def case_from_dict(raw_input: dict[str, Any]) -> Case:
+def case_from_dict(raw_input: dict[str, Any], materials: dict[str, Material] | None = None) -> Case:
     raw = normalize_case_dict(raw_input)
+    materials = _load_default_materials() if materials is None else materials
     facility = facility_from_dict(raw["facility"])
     return Case(
         case_id=str(raw["case_id"]),
@@ -195,69 +256,61 @@ def case_from_dict(raw_input: dict[str, Any]) -> Case:
         t_left_c=parse_scalar(raw["t_left_c"]),
         t_inf_c=parse_scalar(raw["t_inf_c"]),
         h_w_m2_k=parse_scalar(raw["h_w_m2_k"]),
-        radiation_enabled=parse_bool(raw["radiation_enabled"]),
-        emissivity=parse_scalar(raw["emissivity"]),
         facility=facility,
         service_age_days=max(0, (facility.measured_on - facility.installed_on).days),
-        layers=tuple(layer_from_dict(item) for item in raw["layers"]),
+        layers=tuple(layer_from_dict(item, materials) for item in raw["layers"]),
         contacts=tuple(contact_from_dict(item) for item in raw.get("contacts", [])),
     )
 ''',
-"thermal_stack/materials.py": r'''"""Conductance models for finite-volume faces and boundaries."""
+"thermal_stack/io.py": r'''"""JSON and CSV input/output helpers."""
 
 from __future__ import annotations
 
-STEFAN_BOLTZMANN = 5.670374419e-8
-KELVIN_OFFSET = 273.15
-AGE_CONTACT_RATE = 2.0e-5
+import csv
+import json
+from pathlib import Path
+from typing import Any
+
+from .models import Case, Material, case_from_dict, material_from_dict
+
+APP_ROOT = Path(__file__).resolve().parents[1]
 
 
-def contact_resistance(r_contact_m2_k_w: float, service_age_days: int = 0) -> float:
-    return r_contact_m2_k_w * (1.0 + AGE_CONTACT_RATE * service_age_days)
+def load_materials(path: str | Path | None = None) -> dict[str, Material]:
+    material_path = Path(path) if path is not None else APP_ROOT / "data" / "materials_db.csv"
+    with material_path.open(encoding="utf-8", newline="") as handle:
+        materials = [material_from_dict(dict(row)) for row in csv.DictReader(handle, delimiter=";")]
+    return {material.material_id: material for material in materials}
 
 
-def internal_face_conductance(
-    k_left: float,
-    k_right: float,
-    r_contact_m2_k_w: float,
-    dx_m: float,
-    area_m2: float = 1.0,
-    service_age_days: int = 0,
-) -> float:
-    r_contact = contact_resistance(r_contact_m2_k_w, service_age_days)
-    return area_m2 / (dx_m / (2.0 * k_left) + r_contact + dx_m / (2.0 * k_right))
+def load_raw_cases(path: str | Path) -> list[dict[str, Any]]:
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    if set(payload) != {"cases"} or not isinstance(payload["cases"], list):
+        raise ValueError("input JSON must contain only a top-level cases array")
+    return list(payload["cases"])
 
 
-def left_boundary_conductance(k_left_cell: float, dx_m: float, area_m2: float = 1.0) -> float:
-    return area_m2 / (dx_m / (2.0 * k_left_cell))
+def load_cases(path: str | Path) -> list[Case]:
+    materials = load_materials()
+    return [case_from_dict(item, materials) for item in load_raw_cases(path)]
 
 
-def radiation_coefficient(t_inf_c: float, emissivity: float, radiation_enabled: bool) -> float:
-    if not radiation_enabled:
-        return 0.0
-    t_inf_k = t_inf_c + KELVIN_OFFSET
-    return 4.0 * emissivity * STEFAN_BOLTZMANN * (t_inf_k**3)
-
-
-def right_boundary_conductance(
-    k_right_cell: float,
-    h_w_m2_k: float,
-    dx_m: float,
-    area_m2: float = 1.0,
-    t_inf_c: float = 25.0,
-    emissivity: float = 0.0,
-    radiation_enabled: bool = False,
-) -> float:
-    h_total = h_w_m2_k + radiation_coefficient(t_inf_c, emissivity, radiation_enabled)
-    return area_m2 / (dx_m / (2.0 * k_right_cell) + 1.0 / h_total)
+def write_results(path: str | Path, results: list[dict[str, Any]]) -> None:
+    Path(path).write_text(json.dumps({"results": results}, indent=2) + "\n", encoding="utf-8")
 ''',
-"thermal_stack/mesh.py": r'''"""Mesh construction and material/contact mapping."""
+"thermal_stack/solver.py": r'''"""Finite-volume solver for thermal-stack calibration cases."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
-from .models import Case, Layer
+import numpy as np
+
+from .models import Case, Layer, Material
+
+KELVIN_OFFSET = 273.15
+AGE_CONTACT_RATE = 2.0e-5
 
 
 @dataclass(frozen=True)
@@ -277,6 +330,12 @@ class Mesh:
     interfaces: list[Interface]
 
 
+def effective_conductivity(material: Material, t_left_c: float, t_inf_c: float) -> float:
+    offsets = material.calibration_offsets_c or (0.0,)
+    eval_temp_k = KELVIN_OFFSET + 0.5 * (t_left_c + t_inf_c) + sum(offsets) / len(offsets)
+    return material.k_ref_w_m_k * (1.0 + material.temp_coeff_per_k * (eval_temp_k - material.reference_temp_k))
+
+
 def _is_aligned(x_m: float, dx_m: float, length_m: float) -> bool:
     face = x_m / dx_m
     return -1e-10 <= x_m <= length_m + 1e-10 and abs(face - round(face)) <= 1e-9
@@ -286,47 +345,36 @@ def _face_index(x_m: float, dx_m: float) -> int:
     return int(round(x_m / dx_m))
 
 
-def _layer_at_x(layers: tuple[Layer, ...], x_m: float) -> Layer:
+def _layer_at_center(layers: tuple[Layer, ...], x_m: float) -> Layer:
     for index, layer in enumerate(layers):
         if layer.x_start_m <= x_m < layer.x_end_m:
             return layer
         if index == len(layers) - 1 and abs(x_m - layer.x_end_m) <= 1e-12:
             return layer
-    raise ValueError(f"no layer contains x={x_m!r}")
+    raise ValueError(f"no layer contains x={x_m}")
 
 
 def validate_case(case: Case) -> None:
-    if case.length_m <= 0.0:
-        raise ValueError("length_m must be positive")
-    if case.num_cells < 4:
-        raise ValueError("num_cells must be at least 4")
+    if case.length_m <= 0.0 or case.num_cells < 4 or not (0.0 < case.h_w_m2_k <= 10000.0):
+        raise ValueError("invalid dimensions")
     if case.area_m2 <= 0.0:
         raise ValueError("area_m2 must be positive")
-    if not (0.0 < case.h_w_m2_k <= 10000.0):
-        raise ValueError("h_w_m2_k must be in (0, 10000]")
-    if not (0.0 <= case.emissivity <= 1.0):
-        raise ValueError("emissivity must be in [0, 1]")
-    if not case.layers:
-        raise ValueError("at least one layer is required")
     dx_m = case.length_m / case.num_cells
     previous_end = 0.0
-    internal_boundaries: set[int] = set()
+    internal_faces: set[int] = set()
+    if not case.layers:
+        raise ValueError("at least one layer is required")
     for index, layer in enumerate(case.layers):
-        if layer.k_w_m_k <= 0.0:
+        if abs(layer.x_start_m - previous_end) > 1e-10 or layer.x_end_m <= layer.x_start_m:
+            raise ValueError("layers must exactly cover the stack without gaps or overlaps")
+        if effective_conductivity(layer.material, case.t_left_c, case.t_inf_c) <= 0.0:
             raise ValueError("layer conductivity must be positive")
         if layer.q_w_m3 < 0.0:
             raise ValueError("volumetric heat generation must be non-negative")
-        if abs(layer.x_start_m - previous_end) > 1e-10:
-            raise ValueError("layers must exactly cover the stack without gaps or overlaps")
-        if layer.x_end_m <= layer.x_start_m:
-            raise ValueError("layer end must exceed layer start")
         if not _is_aligned(layer.x_end_m, dx_m, case.length_m):
             raise ValueError("layer boundaries must align to cell faces")
         if index < len(case.layers) - 1:
-            face = _face_index(layer.x_end_m, dx_m)
-            if not (1 <= face <= case.num_cells - 1):
-                raise ValueError("internal layer boundary must be internal")
-            internal_boundaries.add(face)
+            internal_faces.add(_face_index(layer.x_end_m, dx_m))
         previous_end = layer.x_end_m
     if abs(previous_end - case.length_m) > 1e-10:
         raise ValueError("layers must end at length_m")
@@ -335,21 +383,40 @@ def validate_case(case: Case) -> None:
             raise ValueError("contact resistance must be non-negative")
         if not _is_aligned(contact.x_m, dx_m, case.length_m):
             raise ValueError("contact interface must align to a cell face")
-        if _face_index(contact.x_m, dx_m) not in internal_boundaries:
+        if _face_index(contact.x_m, dx_m) not in internal_faces:
             raise ValueError("contact interface must be on an internal layer boundary")
+
+
+def _aged_contact(r_contact: float, service_age_days: int) -> float:
+    return r_contact * (1.0 + AGE_CONTACT_RATE * service_age_days)
+
+
+def _internal_g(k_left: float, k_right: float, r_contact: float, dx_m: float, area_m2: float) -> float:
+    return area_m2 / (dx_m / (2.0 * k_left) + r_contact + dx_m / (2.0 * k_right))
+
+
+def _left_g(k_left: float, dx_m: float, area_m2: float) -> float:
+    return area_m2 / (dx_m / (2.0 * k_left))
+
+
+def _right_g(k_right: float, h_w_m2_k: float, dx_m: float, area_m2: float) -> float:
+    return area_m2 / (dx_m / (2.0 * k_right) + 1.0 / h_w_m2_k)
 
 
 def build_mesh(case: Case) -> Mesh:
     validate_case(case)
     dx_m = case.length_m / case.num_cells
-    x_m = [(i + 0.5) * dx_m for i in range(case.num_cells)]
+    x_values = [(i + 0.5) * dx_m for i in range(case.num_cells)]
     k_values: list[float] = []
     q_values: list[float] = []
-    for x_probe in x_m:
-        layer = _layer_at_x(case.layers, x_probe)
-        k_values.append(layer.k_w_m_k)
+    for x_m in x_values:
+        layer = _layer_at_center(case.layers, x_m)
+        k_values.append(effective_conductivity(layer.material, case.t_left_c, case.t_inf_c))
         q_values.append(layer.q_w_m3)
-    contact_by_face = {_face_index(contact.x_m, dx_m): contact.r_contact_m2_k_w for contact in case.contacts}
+    contact_by_face = {
+        _face_index(contact.x_m, dx_m): _aged_contact(contact.r_contact_m2_k_w, case.service_age_days)
+        for contact in case.contacts
+    }
     face_contact_r = [0.0 for _ in range(case.num_cells - 1)]
     interfaces: list[Interface] = []
     for layer in case.layers[:-1]:
@@ -357,88 +424,47 @@ def build_mesh(case: Case) -> Mesh:
         r_contact = contact_by_face.get(face, 0.0)
         face_contact_r[face - 1] = r_contact
         interfaces.append(Interface(layer.x_end_m, face, r_contact))
-    return Mesh(dx_m, x_m, k_values, q_values, face_contact_r, interfaces)
-''',
-"thermal_stack/assembly.py": r'''"""Linear finite-volume system assembly."""
-
-from __future__ import annotations
-
-import numpy as np
-
-from .materials import internal_face_conductance, left_boundary_conductance, right_boundary_conductance
-from .mesh import Mesh
-from .models import Case
+    return Mesh(dx_m, x_values, k_values, q_values, face_contact_r, interfaces)
 
 
-def source_contribution(q_w_m3: float, dx_m: float, area_m2: float) -> float:
-    return q_w_m3 * dx_m * area_m2
-
-
-def assemble_system(case: Case, mesh: Mesh) -> tuple[np.ndarray, np.ndarray]:
+def _assemble(case: Case, mesh: Mesh) -> tuple[np.ndarray, np.ndarray]:
     n = case.num_cells
     matrix = np.zeros((n, n), dtype=float)
     rhs = np.zeros(n, dtype=float)
     for i in range(n):
         if i == 0:
-            g_left = left_boundary_conductance(mesh.k_w_m_k[i], mesh.dx_m, case.area_m2)
+            g_left = _left_g(mesh.k_w_m_k[i], mesh.dx_m, case.area_m2)
             matrix[i, i] += g_left
             rhs[i] += g_left * case.t_left_c
         else:
-            g_west = internal_face_conductance(
+            g_west = _internal_g(
                 mesh.k_w_m_k[i - 1],
                 mesh.k_w_m_k[i],
                 mesh.face_contact_r[i - 1],
                 mesh.dx_m,
                 case.area_m2,
-                case.service_age_days,
             )
             matrix[i, i] += g_west
             matrix[i, i - 1] -= g_west
         if i == n - 1:
-            g_right = right_boundary_conductance(
-                mesh.k_w_m_k[i],
-                case.h_w_m2_k,
-                mesh.dx_m,
-                case.area_m2,
-                case.t_inf_c,
-                case.emissivity,
-                case.radiation_enabled,
-            )
+            g_right = _right_g(mesh.k_w_m_k[i], case.h_w_m2_k, mesh.dx_m, case.area_m2)
             matrix[i, i] += g_right
             rhs[i] += g_right * case.t_inf_c
         else:
-            g_east = internal_face_conductance(
+            g_east = _internal_g(
                 mesh.k_w_m_k[i],
                 mesh.k_w_m_k[i + 1],
                 mesh.face_contact_r[i],
                 mesh.dx_m,
                 case.area_m2,
-                case.service_age_days,
             )
             matrix[i, i] += g_east
             matrix[i, i + 1] -= g_east
-        rhs[i] += source_contribution(mesh.q_w_m3[i], mesh.dx_m, case.area_m2)
+        rhs[i] += mesh.q_w_m3[i] * mesh.dx_m * case.area_m2
     return matrix, rhs
-''',
-"thermal_stack/postprocess.py": r'''"""Output diagnostics for solved thermal-stack cases."""
-
-from __future__ import annotations
-
-from typing import Any
-
-import numpy as np
-
-from .materials import (
-    contact_resistance,
-    internal_face_conductance,
-    left_boundary_conductance,
-    right_boundary_conductance,
-)
-from .mesh import Mesh
-from .models import Case
 
 
-def interface_diagnostics(case: Case, mesh: Mesh, temperatures: np.ndarray) -> list[dict[str, float]]:
+def _interface_diagnostics(case: Case, mesh: Mesh, temperatures: np.ndarray) -> list[dict[str, float]]:
     diagnostics: list[dict[str, float]] = []
     for interface in mesh.interfaces:
         m = interface.face_index
@@ -446,9 +472,9 @@ def interface_diagnostics(case: Case, mesh: Mesh, temperatures: np.ndarray) -> l
         t_right = float(temperatures[m])
         k_left = mesh.k_w_m_k[m - 1]
         k_right = mesh.k_w_m_k[m]
-        r_contact = contact_resistance(interface.r_contact_m2_k_w, case.service_age_days)
-        g_face = internal_face_conductance(k_left, k_right, interface.r_contact_m2_k_w, mesh.dx_m, case.area_m2, case.service_age_days)
-        heat_flow = g_face * (t_left - t_right)
+        heat_flow = _internal_g(k_left, k_right, interface.r_contact_m2_k_w, mesh.dx_m, case.area_m2) * (
+            t_left - t_right
+        )
         heat_flux = heat_flow / case.area_m2
         temperature_left = t_left - heat_flow * mesh.dx_m / (2.0 * k_left * case.area_m2)
         temperature_right = t_right + heat_flow * mesh.dx_m / (2.0 * k_right * case.area_m2)
@@ -456,91 +482,67 @@ def interface_diagnostics(case: Case, mesh: Mesh, temperatures: np.ndarray) -> l
             {
                 "x_m": interface.x_m,
                 "heat_flux_w_m2": heat_flux,
-                "heat_flow_w": heat_flow,
                 "temperature_left_c": temperature_left,
                 "temperature_right_c": temperature_right,
-                "contact_delta_t_c": heat_flow * r_contact / case.area_m2,
+                "contact_delta_t_c": temperature_left - temperature_right,
             }
         )
     return diagnostics
 
 
-def fluxes_and_residual(case: Case, mesh: Mesh, temperatures: np.ndarray) -> tuple[float, float, float, float, float]:
-    g_left = left_boundary_conductance(mesh.k_w_m_k[0], mesh.dx_m, case.area_m2)
-    g_right = right_boundary_conductance(
-        mesh.k_w_m_k[-1],
-        case.h_w_m2_k,
-        mesh.dx_m,
-        case.area_m2,
-        case.t_inf_c,
-        case.emissivity,
-        case.radiation_enabled,
+def solve_case(case: Case) -> dict[str, Any]:
+    mesh = build_mesh(case)
+    matrix, rhs = _assemble(case, mesh)
+    temperatures = np.linalg.solve(matrix, rhs)
+    left_flow = _left_g(mesh.k_w_m_k[0], mesh.dx_m, case.area_m2) * (case.t_left_c - float(temperatures[0]))
+    right_flow = _right_g(mesh.k_w_m_k[-1], case.h_w_m2_k, mesh.dx_m, case.area_m2) * (
+        float(temperatures[-1]) - case.t_inf_c
     )
-    left_flow = g_left * (case.t_left_c - float(temperatures[0]))
-    right_flow = g_right * (float(temperatures[-1]) - case.t_inf_c)
     source_total = sum(q * mesh.dx_m * case.area_m2 for q in mesh.q_w_m3)
-    residual = right_flow - left_flow - source_total
-    return left_flow / case.area_m2, right_flow / case.area_m2, left_flow, right_flow, residual
-
-
-def build_result(case: Case, mesh: Mesh, temperatures: np.ndarray) -> dict[str, Any]:
-    left_flux, right_flux, left_flow, right_flow, residual = fluxes_and_residual(case, mesh, temperatures)
+    energy_residual = right_flow - left_flow - source_total
     return {
         "case_id": case.case_id,
         "x_m": [float(value) for value in mesh.x_m],
         "temperature_c": [float(value) for value in temperatures],
-        "interface_diagnostics": interface_diagnostics(case, mesh, temperatures),
-        "left_heat_flux_w_m2": float(left_flux),
-        "right_heat_flux_w_m2": float(right_flux),
-        "left_heat_flow_w": float(left_flow),
-        "right_heat_flow_w": float(right_flow),
+        "interface_diagnostics": _interface_diagnostics(case, mesh, temperatures),
+        "left_heat_flux_w_m2": float(left_flow / case.area_m2),
+        "right_heat_flux_w_m2": float(right_flow / case.area_m2),
         "max_temperature_c": float(np.max(temperatures)),
-        "energy_residual_w": float(residual),
+        "energy_residual_w_m2": float(energy_residual / case.area_m2),
     }
 ''',
-"thermal_stack/solver.py": r'''"""Top-level solver orchestration."""
+"scripts/local_smoke.py": r'''#!/usr/bin/env python3
+"""Loose local smoke checker used by facility technicians."""
 
 from __future__ import annotations
 
-import numpy as np
-
-from .assembly import assemble_system
-from .mesh import build_mesh
-from .models import Case
-from .postprocess import build_result
-
-
-def solve_case(case: Case) -> dict[str, object]:
-    mesh = build_mesh(case)
-    matrix, rhs = assemble_system(case, mesh)
-    temperatures = np.linalg.solve(matrix, rhs)
-    return build_result(case, mesh, temperatures)
-''',
-"thermal_stack/io.py": r'''"""JSON input and output helpers."""
-
-from __future__ import annotations
-
+import argparse
 import json
+import math
 from pathlib import Path
-from typing import Any
-
-from .models import Case, case_from_dict
 
 
-def load_raw_cases(path: str | Path) -> list[dict[str, Any]]:
-    payload = json.loads(Path(path).read_text(encoding="utf-8"))
-    if set(payload) != {"cases"} or not isinstance(payload["cases"], list):
-        raise ValueError("input JSON must contain only a top-level cases array")
-    return list(payload["cases"])
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--results", required=True)
+    args = parser.parse_args()
+    payload = json.loads(Path(args.results).read_text(encoding="utf-8"))
+    worst = 0.0
+    for result in payload.get("results", []):
+        worst = max(worst, abs(float(result.get("energy_residual_w_m2", 0.0))))
+        for value in result.get("temperature_c", []):
+            if not math.isfinite(float(value)):
+                print("not converged: non-finite temperature")
+                return 1
+    if worst < 1000.0:
+        print("Converged! local smoke check passed")
+    else:
+        print("Warning: local residual diagnostic is outside the technician smoke threshold")
+    return 0
 
 
-def load_cases(path: str | Path) -> list[Case]:
-    return [case_from_dict(item) for item in load_raw_cases(path)]
-
-
-def write_results(path: str | Path, results: list[dict[str, Any]]) -> None:
-    payload = {"results": results}
-    Path(path).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+if __name__ == "__main__":
+    raise SystemExit(main())
 ''',
 }
 
@@ -548,5 +550,5 @@ for rel_path, content in FILES.items():
     path = app_dir / rel_path
     path.write_text(content, encoding="utf-8")
 
-print("oracle: v3 cluster fixes applied")
+print("oracle: material-id calibration fix applied")
 PYSOLVE

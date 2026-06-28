@@ -6,6 +6,7 @@ import copy
 import csv
 import json
 import math
+import os
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
@@ -15,7 +16,7 @@ import numpy as np
 KELVIN_OFFSET = 273.15
 AGE_CONTACT_RATE = 2.0e-5
 TASK_DIR = Path(__file__).resolve().parents[2]
-APP_DATA = TASK_DIR / "environment" / "app" / "data"
+APP_DATA = Path(os.environ["APP_DIR"]) / "data" if "APP_DIR" in os.environ else TASK_DIR / "environment" / "app" / "data"
 
 
 def load_cases(path: str | Path) -> list[dict[str, Any]]:
@@ -234,13 +235,10 @@ def solve_case(raw_case: dict[str, Any]) -> dict[str, Any]:
     layers = case["layers"]
     k_values = []
     q_values = []
-    material_dates: list[str] = []
     for x_m in x_values:
         layer = _layer_at_center(layers, x_m)
         k_values.append(_effective_k(layer["material"], case["t_left_c"], case["t_inf_c"]))
         q_values.append(layer.get("q_w_m3", 0.0))
-    for layer in layers:
-        material_dates.append(layer["material"]["certified_on"].isoformat())
     contact_by_face = {
         _face_index(item["x_m"], dx): _aged_contact(item["r_contact_m2_k_w"], case["service_age_days"])
         for item in case.get("contacts", [])
@@ -293,7 +291,6 @@ def solve_case(raw_case: dict[str, Any]) -> dict[str, Any]:
             {
                 "x_m": x_b,
                 "heat_flux_w_m2": heat_flux,
-                "heat_flow_w": heat_flow,
                 "temperature_left_c": t_face_left,
                 "temperature_right_c": t_face_right,
                 "contact_delta_t_c": t_face_left - t_face_right,
@@ -305,20 +302,16 @@ def solve_case(raw_case: dict[str, Any]) -> dict[str, Any]:
     energy_residual = right_flow - left_flow - source_total
     return {
         "case_id": case["case_id"],
-        "facility_installed_on_iso": case["facility_installed_on"].isoformat(),
-        "facility_measured_on_iso": case["facility_measured_on"].isoformat(),
-        "material_certified_on_iso": material_dates,
         "x_m": x_values,
         "temperature_c": [float(v) for v in temperatures],
         "interface_diagnostics": diagnostics,
         "left_heat_flux_w_m2": left_flow / area,
         "right_heat_flux_w_m2": right_flow / area,
-        "left_heat_flow_w": left_flow,
-        "right_heat_flow_w": right_flow,
         "max_temperature_c": float(np.max(temperatures)),
-        "energy_residual_w": float(energy_residual),
+        "energy_residual_w_m2": float(energy_residual / area),
         "_linear_residual_inf": float(np.max(np.abs(residual_vec))),
         "_normalized_case": case,
+        "_energy_residual_w": float(energy_residual),
     }
 
 
@@ -352,8 +345,8 @@ def check_physical_invariants(raw_case: dict[str, Any], result: dict[str, Any]) 
     temps = [float(v) for v in result["temperature_c"]]
     if any(t <= -KELVIN_OFFSET for t in temps):
         failures.append("temperature not positive in kelvin")
-    if abs(float(result["energy_residual_w"])) > 1e-6:
-        failures.append("energy residual exceeds 1e-6 W")
+    if abs(float(result["energy_residual_w_m2"])) > 1e-6:
+        failures.append("energy residual exceeds 1e-6 W/m2")
     if len(normalized["layers"]) == 1 and result["interface_diagnostics"]:
         failures.append("single-layer case emitted interfaces")
     source_total = sum(
