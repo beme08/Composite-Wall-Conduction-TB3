@@ -18,7 +18,7 @@ The partial-fix audit confirms that the all-buggy state fails, the all-fixed
 state passes, every single-fix-alone state fails, every all-but-one state fails,
 and only the full eight-fix state receives reward.
 
-The v2 public task removes the direct implementation formulas from
+The final public task removes the direct implementation formulas from
 `instruction.md`. The intended model remains recoverable from public calibration
 cases, approved outputs, engineering notes, unit conventions, existing code
 structure, and physical invariants, while the hidden verifier checks

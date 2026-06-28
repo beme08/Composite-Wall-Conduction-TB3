@@ -1,7 +1,6 @@
 # Thermal Stack Calibration TB3 Task
 
-A **Terminal-Bench 3 (TB3)** compatible task built as a coding assignment that i spent a week doing for a
-**YCombinator AI company**. 
+A **Terminal-Bench 3 (TB3)** compatible task built as a one-week coding assignment for a **Y Combinator AI company**. 
 
 The task asks an agent to repair a legacy electronics-cooling thermal-stack
 qualification tool. The public instruction no longer gives the complete solver
@@ -35,8 +34,8 @@ repository (not a TB3 upstream PR).
 - Docker oracle/nop: ✅
 - Codex standard 3/3 valid failures ✅
 - Claude standard 3/3 valid failures ✅
-- Codex local cheat reproduction: reward 0.0 ✅
-- Claude local cheat reproduction: reward 0.0 ✅
+- Codex adversarial trial via TB3 hack-trial prompt: reward 0.0 ✅
+- Claude adversarial trial via TB3 hack-trial prompt: reward 0.0 ✅
 - **Models:** OpenAI GPT-5.5 (extra-high reasoning) via Codex, Anthropic Claude Opus 4.8 (high effort) via Claude Code
 
 See `docs/trial-results.md` for the full trial history,
