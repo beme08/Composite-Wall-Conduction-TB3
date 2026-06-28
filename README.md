@@ -3,15 +3,15 @@
 A **Terminal-Bench 3 (TB3)** compatible task built as a coding assignment that i spent a week doing for a
 **YCombinator AI company**. 
 
-Task name `thermal-stack-calibration`, expected
-package name `beme08/thermal-stack-calibration`.
-
 The task asks an agent to repair a legacy electronics-cooling thermal-stack
 qualification tool. The public instruction no longer gives the complete solver
 formulas; the intended model must be recovered from engineering notes, visible
 calibration cases, approved calibration outputs, code structure, units, and
 physical invariants. The verifier compares the repaired app against an
 independent deterministic reference solver on hidden generalization cases.
+
+Task name `thermal-stack-calibration`, expected
+package name `beme08/thermal-stack-calibration`.
 
 ## Layout
 
