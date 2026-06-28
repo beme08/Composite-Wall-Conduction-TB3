@@ -36,6 +36,7 @@ repository (not a TB3 upstream PR).
 - Post-hardening Codex gatekeeper run: reward **0.0** ✅
 - Post-hardening Claude run: API rate-limit exception (not counted as a valid trial)
 - Full 3× Codex + 3× Claude + cheat trials: ⬜ **not run**
+- **Models:** OpenAI GPT-5.5 (extra-high reasoning) via Codex, Anthropic Claude Opus 4.8 (high effort) via Claude Code
 
 See `docs/trial-results.md` for the full trial history.
 
