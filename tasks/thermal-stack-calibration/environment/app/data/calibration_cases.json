@@ -123,6 +123,57 @@
       "contacts": [
         {"x_m": 0.05, "r_contact_m2_k_w": 0.008, "contact_temp_coeff_per_k": 0.006, "contact_t_ref_c": 25.0}
       ]
+    },
+    {
+      "case_id": "cal_temp_dependent_discovery_a",
+      "length_m": 0.1,
+      "num_cells": 20,
+      "area_m2": 1.0,
+      "t_left_c": 95.0,
+      "t_inf_c": 20.0,
+      "h_w_m2_k": 25.0,
+      "facility": {"city": "Austin", "region": "TX", "country": "US", "installed_on": "01/15/2026", "measured_on": "04/15/2026"},
+      "layers": [
+        {"name": "left", "x_start_m": 0.0, "x_end_m": 0.05, "material_id": "temp_contact_left", "q_w_m3": 5000.0},
+        {"name": "right", "x_start_m": 0.05, "x_end_m": 0.1, "material_id": "temp_contact_right", "q_w_m3": 0.0}
+      ],
+      "contacts": [
+        {"x_m": 0.05, "r_contact_m2_k_w": 0.015, "contact_temp_coeff_per_k": 0.025, "contact_t_ref_c": 25.0}
+      ]
+    },
+    {
+      "case_id": "cal_temp_dependent_discovery_b",
+      "length_m": 0.1,
+      "num_cells": 20,
+      "area_m2": 1.0,
+      "t_left_c": 95.0,
+      "t_inf_c": 18.0,
+      "h_w_m2_k": 25.0,
+      "facility": {"city": "Austin", "region": "TX", "country": "US", "installed_on": "01/15/2026", "measured_on": "04/15/2026"},
+      "layers": [
+        {"name": "left", "x_start_m": 0.0, "x_end_m": 0.05, "material_id": "temp_contact_left", "q_w_m3": 5000.0},
+        {"name": "right", "x_start_m": 0.05, "x_end_m": 0.1, "material_id": "temp_contact_right", "q_w_m3": 0.0}
+      ],
+      "contacts": [
+        {"x_m": 0.05, "r_contact_m2_k_w": 0.020, "contact_temp_coeff_per_k": 0.020, "contact_t_ref_c": 25.0}
+      ]
+    },
+    {
+      "case_id": "cal_temp_dependent_discovery_c",
+      "length_m": 0.1,
+      "num_cells": 20,
+      "area_m2": 1.0,
+      "t_left_c": 98.0,
+      "t_inf_c": 20.0,
+      "h_w_m2_k": 25.0,
+      "facility": {"city": "Austin", "region": "TX", "country": "US", "installed_on": "01/15/2026", "measured_on": "04/15/2026"},
+      "layers": [
+        {"name": "left", "x_start_m": 0.0, "x_end_m": 0.05, "material_id": "temp_contact_left", "q_w_m3": 5000.0},
+        {"name": "right", "x_start_m": 0.05, "x_end_m": 0.1, "material_id": "temp_contact_right", "q_w_m3": 0.0}
+      ],
+      "contacts": [
+        {"x_m": 0.05, "r_contact_m2_k_w": 0.018, "contact_temp_coeff_per_k": 0.025, "contact_t_ref_c": 25.0}
+      ]
     }
   ]
 }

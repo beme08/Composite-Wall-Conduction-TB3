@@ -3,14 +3,189 @@
   "cluster_states": [
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "0000",
+      "mask": "00000",
       "mutations": [],
       "passes": false,
       "reward": 0.0
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "0001",
+      "mask": "00001",
+      "mutations": [
+        "missing:B_local_validation_schema",
+        "missing:C_state_order_coupling",
+        "missing:D_area_contact_temperature",
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "00010",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:C_state_order_coupling",
+        "missing:D_area_contact_temperature",
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "00011",
+      "mutations": [
+        "missing:C_state_order_coupling",
+        "missing:D_area_contact_temperature",
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "00100",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:B_local_validation_schema",
+        "missing:D_area_contact_temperature",
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "00101",
+      "mutations": [
+        "missing:B_local_validation_schema",
+        "missing:D_area_contact_temperature",
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "00110",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:D_area_contact_temperature",
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "00111",
+      "mutations": [
+        "missing:D_area_contact_temperature",
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "01000",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:B_local_validation_schema",
+        "missing:C_state_order_coupling",
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "01001",
+      "mutations": [
+        "missing:B_local_validation_schema",
+        "missing:C_state_order_coupling",
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "01010",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:C_state_order_coupling",
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "01011",
+      "mutations": [
+        "missing:C_state_order_coupling",
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "01100",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:B_local_validation_schema",
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "01101",
+      "mutations": [
+        "missing:B_local_validation_schema",
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "01110",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "01111",
+      "mutations": [
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "10000",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:B_local_validation_schema",
+        "missing:C_state_order_coupling",
+        "missing:D_area_contact_temperature"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "10001",
       "mutations": [
         "missing:B_local_validation_schema",
         "missing:C_state_order_coupling",
@@ -21,7 +196,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "0010",
+      "mask": "10010",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:C_state_order_coupling",
@@ -32,7 +207,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "0011",
+      "mask": "10011",
       "mutations": [
         "missing:C_state_order_coupling",
         "missing:D_area_contact_temperature"
@@ -42,7 +217,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "0100",
+      "mask": "10100",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:B_local_validation_schema",
@@ -53,7 +228,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "0101",
+      "mask": "10101",
       "mutations": [
         "missing:B_local_validation_schema",
         "missing:D_area_contact_temperature"
@@ -63,7 +238,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "0110",
+      "mask": "10110",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:D_area_contact_temperature"
@@ -73,7 +248,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "0111",
+      "mask": "10111",
       "mutations": [
         "missing:D_area_contact_temperature"
       ],
@@ -82,7 +257,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "1000",
+      "mask": "11000",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:B_local_validation_schema",
@@ -93,7 +268,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "1001",
+      "mask": "11001",
       "mutations": [
         "missing:B_local_validation_schema",
         "missing:C_state_order_coupling"
@@ -103,7 +278,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "1010",
+      "mask": "11010",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:C_state_order_coupling"
@@ -113,7 +288,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "1011",
+      "mask": "11011",
       "mutations": [
         "missing:C_state_order_coupling"
       ],
@@ -122,7 +297,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "1100",
+      "mask": "11100",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:B_local_validation_schema"
@@ -132,7 +307,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "1101",
+      "mask": "11101",
       "mutations": [
         "missing:B_local_validation_schema"
       ],
@@ -141,7 +316,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "1110",
+      "mask": "11110",
       "mutations": [
         "missing:A_facility_normalization"
       ],
@@ -150,7 +325,7 @@
     },
     {
       "failure_excerpt": "",
-      "mask": "1111",
+      "mask": "11111",
       "mutations": [],
       "passes": true,
       "reward": 1.0
@@ -160,15 +335,16 @@
     "A_facility_normalization",
     "B_local_validation_schema",
     "C_state_order_coupling",
-    "D_area_contact_temperature"
+    "D_area_contact_temperature",
+    "E_contact_consistency"
   ],
   "mode": "cluster-audit",
   "nop_reward": 0.0,
   "passed": true,
   "passing_masks": [
-    "1111"
+    "11111"
   ],
-  "states_evaluated": 16,
+  "states_evaluated": 32,
   "task": "thermal-stack-calibration",
   "wrong_fix_probe_rewards": {
     "all_T_to_K": 0.0,
@@ -179,7 +355,8 @@
     "global_comma": 0.0,
     "harmonic_only": 0.0,
     "loose_convergence": 0.0,
-    "temp_coeff_uses_celsius": 0.0
+    "temp_coeff_uses_celsius": 0.0,
+    "two_pass_only": 0.0
   },
   "wrong_fix_probes": {
     "all_T_to_K": {
@@ -234,6 +411,12 @@
       "failure_excerpt": "verifier reward 0.0",
       "passes": false,
       "probe": "temp_coeff_uses_celsius",
+      "reward": 0.0
+    },
+    "two_pass_only": {
+      "failure_excerpt": "verifier reward 0.0",
+      "passes": false,
+      "probe": "two_pass_only",
       "reward": 0.0
     }
   }

@@ -336,35 +336,45 @@ def solve_case(raw_case: dict[str, Any]) -> dict[str, Any]:
     case = normalize_case(raw_case)
     _validate(case)
 
-    # First pass: solve with age-corrected contact resistance only
-    first = _solve_core(case)
-
-    has_temp_dependent = any(
-        c.get("contact_temp_coeff_per_k", 0.0) != 0.0
-        for c in case.get("contacts", [])
-    )
+    # Fixed-point iteration for temperature-dependent contact resistance
+    cs = case.get("contacts", [])
+    has_temp_dependent = any(c.get("contact_temp_coeff_per_k", 0.0) != 0.0 for c in cs)
     if not has_temp_dependent:
-        return {k: v for k, v in first.items() if not k.startswith("_")}
+        result = _solve_core(case)
+        return {k: v for k, v in result.items() if not k.startswith("_")}
 
-    # Second pass: correct contact resistance for temperature
-    dx = first["_dx"]
-    diagnostics = first["interface_diagnostics"]
-    corrected: dict[int, float] = {}
-    for i, contact in enumerate(case.get("contacts", [])):
-        coeff = contact.get("contact_temp_coeff_per_k", 0.0)
-        if coeff != 0.0 and i < len(diagnostics):
-            t_eval_c = 0.5 * (diagnostics[i]["temperature_left_c"] + diagnostics[i]["temperature_right_c"])
-            r_eff = _effective_contact(
-                contact["r_contact_m2_k_w"],
-                coeff,
-                contact.get("contact_t_ref_c", 25.0),
-                case["service_age_days"],
-                t_eval_c,
+    dx = case["length_m"] / case["num_cells"]
+    reff: dict[int, float] = {}
+    for c in cs:
+        f = _face_index(c["x_m"], dx)
+        reff[f] = _aged_contact(c["r_contact_m2_k_w"], case["service_age_days"])
+
+    for _ in range(50):
+        result = _solve_core(case, contact_resistances=reff)
+        diag_by_face = {_face_index(d["x_m"], dx): d for d in result["interface_diagnostics"]}
+        new_reff = dict(reff)
+        max_rel = 0.0
+        for c in cs:
+            coeff = c.get("contact_temp_coeff_per_k", 0.0)
+            if coeff == 0.0:
+                continue
+            f = _face_index(c["x_m"], dx)
+            if f not in diag_by_face:
+                continue
+            d = diag_by_face[f]
+            t_eval_c = 0.5 * (d["temperature_left_c"] + d["temperature_right_c"])
+            rn = _effective_contact(
+                c["r_contact_m2_k_w"], coeff, c.get("contact_t_ref_c", 25.0),
+                case["service_age_days"], t_eval_c,
             )
-            corrected[_face_index(contact["x_m"], dx)] = r_eff
+            max_rel = max(max_rel, abs(rn - reff[f]) / max(abs(reff[f]), 1e-12))
+            new_reff[f] = rn
+        reff = new_reff
+        if max_rel < 1e-6:
+            break
 
-    second = _solve_core(case, contact_resistances=corrected)
-    return {k: v for k, v in second.items() if not k.startswith("_")}
+    result = _solve_core(case, contact_resistances=reff)
+    return {k: v for k, v in result.items() if not k.startswith("_")}
 
 
 def public_result(result: dict[str, Any]) -> dict[str, Any]:

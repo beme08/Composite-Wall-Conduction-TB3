@@ -520,27 +520,43 @@ def _solve_core(case: Case, override_contacts: dict[int, float] | None = None) -
 
 
 def solve_case(case: Case) -> dict[str, Any]:
-    mesh, temperatures = _solve_core(case)
-
     has_temp_dependent = any(
         c.contact_temp_coeff_per_k != 0.0 for c in case.contacts
     )
-    if has_temp_dependent:
-        diagnostics = _interface_diagnostics(case, mesh, temperatures)
-        override: dict[int, float] = {}
-        for i, contact in enumerate(case.contacts):
-            coeff = contact.contact_temp_coeff_per_k
-            if coeff != 0.0 and i < len(diagnostics):
-                t_eval_c = 0.5 * (diagnostics[i]["temperature_left_c"] + diagnostics[i]["temperature_right_c"])
-                r_eff = _effective_contact(
-                    contact.r_contact_m2_k_w,
-                    coeff,
-                    contact.contact_t_ref_c,
-                    case.service_age_days,
-                    t_eval_c,
+    if not has_temp_dependent:
+        mesh, temperatures = _solve_core(case)
+    else:
+        dx = case.length_m / case.num_cells
+        reff: dict[int, float] = {}
+        for c in case.contacts:
+            f = _face_index(c.x_m, dx)
+            reff[f] = _aged_contact(c.r_contact_m2_k_w, case.service_age_days)
+
+        for _ in range(50):
+            mesh, temperatures = _solve_core(case, override_contacts=reff)
+            diagnostics = _interface_diagnostics(case, mesh, temperatures)
+            diag_by_face = {_face_index(d["x_m"], dx): d for d in diagnostics}
+            new_reff = dict(reff)
+            max_rel = 0.0
+            for c in case.contacts:
+                coeff = c.contact_temp_coeff_per_k
+                if coeff == 0.0:
+                    continue
+                f = _face_index(c.x_m, dx)
+                if f not in diag_by_face:
+                    continue
+                d = diag_by_face[f]
+                t_eval_c = 0.5 * (d["temperature_left_c"] + d["temperature_right_c"])
+                rn = _effective_contact(
+                    c.r_contact_m2_k_w, coeff, c.contact_t_ref_c,
+                    case.service_age_days, t_eval_c,
                 )
-                override[_face_index(contact.x_m, mesh.dx_m)] = r_eff
-        mesh, temperatures = _solve_core(case, override_contacts=override)
+                max_rel = max(max_rel, abs(rn - reff.get(f, 0.0)) / max(abs(reff.get(f, 0.0)), 1e-12))
+                new_reff[f] = rn
+            reff = new_reff
+            if max_rel < 1e-6:
+                break
+        mesh, temperatures = _solve_core(case, override_contacts=reff)
 
     left_flow = _left_g(mesh.k_w_m_k[0], mesh.dx_m, case.area_m2) * (case.t_left_c - float(temperatures[0]))
     right_flow = _right_g(mesh.k_w_m_k[-1], case.h_w_m2_k, mesh.dx_m, case.area_m2) * (

@@ -96,7 +96,7 @@ def parse_facility_date(value: Any, facility: dict[str, Any]) -> date:
         "phoenix",
         "boston",
     }
-    return datetime.strptime(text, "%m/%d/%Y" if us_context else "%d/%m/%Y").date()
+    return datetime.strptime(text, "%m/%d/%Y").date()
 
 
 def temperature_to_c(value: Any, unit: str) -> float:

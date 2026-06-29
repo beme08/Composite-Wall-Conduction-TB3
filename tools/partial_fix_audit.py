@@ -27,6 +27,7 @@ CLUSTERS = [
     "B_local_validation_schema",
     "C_state_order_coupling",
     "D_area_contact_temperature",
+    "E_contact_consistency",
 ]
 ALL_MASK = (1 << len(CLUSTERS)) - 1
 
@@ -118,11 +119,11 @@ def mutate_cache_unchanged(app_dir: Path) -> None:
     )
     _replace(
         solver_path,
-        '''def build_mesh(case: Case) -> Mesh:
+        '''def build_mesh(case: Case, override_contacts: dict[int, float] | None = None) -> Mesh:
     validate_case(case)
     dx_m = case.length_m / case.num_cells
 ''',
-        '''def build_mesh(case: Case) -> Mesh:
+        '''def build_mesh(case: Case, override_contacts: dict[int, float] | None = None) -> Mesh:
     validate_case(case)
     key = (
         case.length_m,
@@ -161,6 +162,54 @@ def mutate_temp_coeff_uses_celsius(app_dir: Path) -> None:
     )
 
 
+def mutate_two_pass_only(app_dir: Path) -> None:
+    """Replace fixed-point contact convergence with a single two-pass correction."""
+    _replace(
+        app_dir / "thermal_stack" / "solver.py",
+        '''        for _ in range(50):
+            mesh, temperatures = _solve_core(case, override_contacts=reff)
+            diagnostics = _interface_diagnostics(case, mesh, temperatures)
+            diag_by_face = {_face_index(d["x_m"], dx): d for d in diagnostics}
+            new_reff = dict(reff)
+            max_rel = 0.0
+            for c in case.contacts:
+                coeff = c.contact_temp_coeff_per_k
+                if coeff == 0.0:
+                    continue
+                f = _face_index(c.x_m, dx)
+                if f not in diag_by_face:
+                    continue
+                d = diag_by_face[f]
+                t_eval_c = 0.5 * (d["temperature_left_c"] + d["temperature_right_c"])
+                rn = _effective_contact(
+                    c.r_contact_m2_k_w, coeff, c.contact_t_ref_c,
+                    case.service_age_days, t_eval_c,
+                )
+                max_rel = max(max_rel, abs(rn - reff.get(f, 0.0)) / max(abs(reff.get(f, 0.0)), 1e-12))
+                new_reff[f] = rn
+            reff = new_reff
+            if max_rel < 1e-6:
+                break''',
+        '''        mesh, temperatures = _solve_core(case, override_contacts=reff)
+        diagnostics = _interface_diagnostics(case, mesh, temperatures)
+        diag_by_face = {_face_index(d["x_m"], dx): d for d in diagnostics}
+        for c in case.contacts:
+            coeff = c.contact_temp_coeff_per_k
+            if coeff == 0.0:
+                continue
+            f = _face_index(c.x_m, dx)
+            if f not in diag_by_face:
+                continue
+            d = diag_by_face[f]
+            t_eval_c = 0.5 * (d["temperature_left_c"] + d["temperature_right_c"])
+            rn = _effective_contact(
+                c.r_contact_m2_k_w, coeff, c.contact_t_ref_c,
+                case.service_age_days, t_eval_c,
+            )
+            reff[f] = rn''',
+    )
+
+
 WRONG_FIX_PROBES: dict[str, Callable[[Path], None]] = {
     "all_T_to_K": mutate_all_t_to_k,
     "dates_US": mutate_dates_us,
@@ -171,6 +220,7 @@ WRONG_FIX_PROBES: dict[str, Callable[[Path], None]] = {
     "cache_unchanged": mutate_cache_unchanged,
     "loose_convergence": mutate_loose_convergence,
     "temp_coeff_uses_celsius": mutate_temp_coeff_uses_celsius,
+    "two_pass_only": mutate_two_pass_only,
 }
 
 CLUSTER_MISSING_MUTATIONS: dict[str, Callable[[Path], None]] = {
@@ -178,6 +228,7 @@ CLUSTER_MISSING_MUTATIONS: dict[str, Callable[[Path], None]] = {
     "B_local_validation_schema": mutate_loose_convergence,
     "C_state_order_coupling": mutate_cache_unchanged,
     "D_area_contact_temperature": mutate_harmonic_only,
+    "E_contact_consistency": mutate_two_pass_only,
 }
 
 
@@ -234,7 +285,7 @@ def evaluate_cluster_state(mask: int) -> dict[str, object]:
                     applied.append(f"missing:{cluster}")
         reward, failure = score_app(app_dir)
         return {
-            "mask": f"{mask:04b}",
+            "mask": f"{mask:0{len(CLUSTERS)}b}",
             "reward": reward,
             "passes": reward == 1.0,
             "mutations": applied,
@@ -277,9 +328,11 @@ def build_report() -> dict[str, object]:
 
 
 def report_ok_values(states: list[dict[str, object]], probes: dict[str, dict[str, object]]) -> bool:
+    expected = 1 << len(CLUSTERS)
+    full_mask = "1" * len(CLUSTERS)
     return (
-        len(states) == 16
-        and [state["mask"] for state in states if state["passes"]] == ["1111"]
+        len(states) == expected
+        and [state["mask"] for state in states if state["passes"]] == [full_mask]
         and states[0]["reward"] == 0.0
         and states[ALL_MASK]["reward"] == 1.0
         and all(item["reward"] == 0.0 for item in probes.values())

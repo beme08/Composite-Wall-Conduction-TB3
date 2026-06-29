@@ -9,8 +9,8 @@ Repair the tool so `/app/scripts/run_solver.py` matches the approved model for
 the public calibration data and generalizes to hidden qualification cases.
 
 Do not replace the task with FEA, CFD, COMSOL, an external PDE solver, internet
-data, or nonlinear material modeling. Keep the existing compact Python
-implementation style and use a direct dense linear solve.
+data, or a packaged black-box simulation tool. Keep the existing compact Python
+implementation style.
 
 ## CLI
 
@@ -87,23 +87,26 @@ mutate the raw input case it is given.
 Some contacts may specify an optional `contact_temp_coeff_per_k` and
 `contact_t_ref_c`. When absent, use `0.0` and `25.0` respectively.
 
-The approved model applies contact aging first, then a deterministic
-temperature correction:
+Contact resistance must account for both in-service aging and
+operating-temperature effects. The aging correction depends on the time
+interval between `installed_on` and `measured_on` in the facility metadata.
+The temperature dependence reflects the contact material's response to the
+local thermal environment.
 
-`R_eff = R_0 * age_factor * (1.0 + contact_temp_coeff_per_k * (T_eval_c - contact_t_ref_c))`
+The approved model requires that contact resistance, interface-side
+temperatures, heat flux through the interface, and energy balance be mutually
+consistent — the contact resistance used in the final solve must be
+compatible with the interface temperatures it produces. The public calibration
+cases illustrate the required behavior for simple configurations, and the
+hidden qualification cases test coupled regimes where the interaction between
+aging, temperature dependence, generation, and property contrast must be
+resolved correctly.
 
-For contacts with nonzero `contact_temp_coeff_per_k`, compute `T_eval_c` using
-a two-pass direct solve:
-
-1. Solve once with age-corrected contact resistance and no temperature
-   correction.
-2. Estimate `T_eval_c` as the average of the first-pass left and right
-   interface-side temperatures for that contact.
-3. Recompute contact resistance with the temperature correction.
-4. Solve once more and report the final result.
-
-Do not use an iterative nonlinear solver; the approved model uses this fixed
-two-pass direct correction.
+Each linearized stack solve should use the existing direct dense linear solve
+approach. The calibration data includes cases with temperature-dependent
+contacts and is intended to reveal the required treatment; a careful audit
+of consistency diagnostics on the calibration outputs will show the nature
+of the contact-temperature interaction.
 
 ## Geometry And Validation
 
