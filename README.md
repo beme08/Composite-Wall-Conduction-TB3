@@ -1,4 +1,4 @@
-# Thermal Stack Calibration TB3 Task
+# Composite-Wall-Conduction-TB3 — Thermal Stack Calibration TB3 Task
 
 A **Terminal-Bench 3 (TB3)** compatible task built as a one-week coding assignment for a **Y Combinator AI company**. 
 
