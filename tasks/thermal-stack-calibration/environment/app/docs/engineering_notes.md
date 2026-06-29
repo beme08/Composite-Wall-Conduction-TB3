@@ -61,10 +61,32 @@ The right boundary is a convection boundary to `t_inf_c`. It is not a fixed
 temperature cell. Stronger `h_w_m2_k` pulls the right-side temperature closer to
 the ambient; weaker `h_w_m2_k` increases the thermal resistance to ambient.
 
+Some qualification setups also exchange radiation between the right surface and
+nearby surroundings. The radiative film is in parallel with the convective film,
+but the surrounding radiation temperature may differ from the ambient fluid
+temperature. Use the Stefan-Boltzmann linearization for a surface-temperature
+estimate `T_s` and surrounding temperature `T_sur`, both in kelvin:
+
+```text
+h_rad = emissivity * view_factor * sigma * (T_s + T_sur) * (T_s^2 + T_sur^2)
+```
+
+Then combine the two surface films as:
+
+```text
+h_total = h_conv + h_rad
+T_reference = (h_conv * T_inf + h_rad * T_sur) / h_total
+```
+
+The approved report requires the final right-surface temperature used for
+`h_rad` to be consistent with the heat flux produced by the linearized solve.
+Zero-emissivity cases reduce to convection only.
+
 ## Calibration Guidance
 
 Use `/app/data/calibration_cases.json` and `/app/data/approved_outputs.json` to
 calibrate the implementation. The cases exercise single-layer conduction,
 volumetric heating, material contrast, contact temperature drops, and convection
-sensitivity. A repair that only matches those case IDs without implementing the
+sensitivity. Some visible cases only probe the presence of optional schema
+fields; a repair that only matches those case IDs without implementing the
 general model will fail hidden qualification cases.

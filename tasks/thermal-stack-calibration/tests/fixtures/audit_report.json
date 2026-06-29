@@ -3,14 +3,381 @@
   "cluster_states": [
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "00000",
+      "mask": "000000",
       "mutations": [],
       "passes": false,
       "reward": 0.0
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "00001",
+      "mask": "000001",
+      "mutations": [
+        "missing:B_local_validation_schema",
+        "missing:C_state_order_coupling",
+        "missing:D_area_contact_temperature",
+        "missing:E_contact_consistency",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "000010",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:C_state_order_coupling",
+        "missing:D_area_contact_temperature",
+        "missing:E_contact_consistency",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "000011",
+      "mutations": [
+        "missing:C_state_order_coupling",
+        "missing:D_area_contact_temperature",
+        "missing:E_contact_consistency",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "000100",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:B_local_validation_schema",
+        "missing:D_area_contact_temperature",
+        "missing:E_contact_consistency",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "000101",
+      "mutations": [
+        "missing:B_local_validation_schema",
+        "missing:D_area_contact_temperature",
+        "missing:E_contact_consistency",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "000110",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:D_area_contact_temperature",
+        "missing:E_contact_consistency",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "000111",
+      "mutations": [
+        "missing:D_area_contact_temperature",
+        "missing:E_contact_consistency",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "001000",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:B_local_validation_schema",
+        "missing:C_state_order_coupling",
+        "missing:E_contact_consistency",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "001001",
+      "mutations": [
+        "missing:B_local_validation_schema",
+        "missing:C_state_order_coupling",
+        "missing:E_contact_consistency",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "001010",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:C_state_order_coupling",
+        "missing:E_contact_consistency",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "001011",
+      "mutations": [
+        "missing:C_state_order_coupling",
+        "missing:E_contact_consistency",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "001100",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:B_local_validation_schema",
+        "missing:E_contact_consistency",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "001101",
+      "mutations": [
+        "missing:B_local_validation_schema",
+        "missing:E_contact_consistency",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "001110",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:E_contact_consistency",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "001111",
+      "mutations": [
+        "missing:E_contact_consistency",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "010000",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:B_local_validation_schema",
+        "missing:C_state_order_coupling",
+        "missing:D_area_contact_temperature",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "010001",
+      "mutations": [
+        "missing:B_local_validation_schema",
+        "missing:C_state_order_coupling",
+        "missing:D_area_contact_temperature",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "010010",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:C_state_order_coupling",
+        "missing:D_area_contact_temperature",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "010011",
+      "mutations": [
+        "missing:C_state_order_coupling",
+        "missing:D_area_contact_temperature",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "010100",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:B_local_validation_schema",
+        "missing:D_area_contact_temperature",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "010101",
+      "mutations": [
+        "missing:B_local_validation_schema",
+        "missing:D_area_contact_temperature",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "010110",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:D_area_contact_temperature",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "010111",
+      "mutations": [
+        "missing:D_area_contact_temperature",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "011000",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:B_local_validation_schema",
+        "missing:C_state_order_coupling",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "011001",
+      "mutations": [
+        "missing:B_local_validation_schema",
+        "missing:C_state_order_coupling",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "011010",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:C_state_order_coupling",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "011011",
+      "mutations": [
+        "missing:C_state_order_coupling",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "011100",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:B_local_validation_schema",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "011101",
+      "mutations": [
+        "missing:B_local_validation_schema",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "011110",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "011111",
+      "mutations": [
+        "missing:F_radiation_boundary_coupling"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "100000",
+      "mutations": [
+        "missing:A_facility_normalization",
+        "missing:B_local_validation_schema",
+        "missing:C_state_order_coupling",
+        "missing:D_area_contact_temperature",
+        "missing:E_contact_consistency"
+      ],
+      "passes": false,
+      "reward": 0.0
+    },
+    {
+      "failure_excerpt": "verifier reward 0.0",
+      "mask": "100001",
       "mutations": [
         "missing:B_local_validation_schema",
         "missing:C_state_order_coupling",
@@ -22,7 +389,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "00010",
+      "mask": "100010",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:C_state_order_coupling",
@@ -34,7 +401,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "00011",
+      "mask": "100011",
       "mutations": [
         "missing:C_state_order_coupling",
         "missing:D_area_contact_temperature",
@@ -45,7 +412,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "00100",
+      "mask": "100100",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:B_local_validation_schema",
@@ -57,7 +424,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "00101",
+      "mask": "100101",
       "mutations": [
         "missing:B_local_validation_schema",
         "missing:D_area_contact_temperature",
@@ -68,7 +435,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "00110",
+      "mask": "100110",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:D_area_contact_temperature",
@@ -79,7 +446,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "00111",
+      "mask": "100111",
       "mutations": [
         "missing:D_area_contact_temperature",
         "missing:E_contact_consistency"
@@ -89,7 +456,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "01000",
+      "mask": "101000",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:B_local_validation_schema",
@@ -101,7 +468,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "01001",
+      "mask": "101001",
       "mutations": [
         "missing:B_local_validation_schema",
         "missing:C_state_order_coupling",
@@ -112,7 +479,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "01010",
+      "mask": "101010",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:C_state_order_coupling",
@@ -123,7 +490,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "01011",
+      "mask": "101011",
       "mutations": [
         "missing:C_state_order_coupling",
         "missing:E_contact_consistency"
@@ -133,7 +500,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "01100",
+      "mask": "101100",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:B_local_validation_schema",
@@ -144,7 +511,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "01101",
+      "mask": "101101",
       "mutations": [
         "missing:B_local_validation_schema",
         "missing:E_contact_consistency"
@@ -154,7 +521,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "01110",
+      "mask": "101110",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:E_contact_consistency"
@@ -164,7 +531,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "01111",
+      "mask": "101111",
       "mutations": [
         "missing:E_contact_consistency"
       ],
@@ -173,7 +540,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "10000",
+      "mask": "110000",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:B_local_validation_schema",
@@ -185,7 +552,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "10001",
+      "mask": "110001",
       "mutations": [
         "missing:B_local_validation_schema",
         "missing:C_state_order_coupling",
@@ -196,7 +563,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "10010",
+      "mask": "110010",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:C_state_order_coupling",
@@ -207,7 +574,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "10011",
+      "mask": "110011",
       "mutations": [
         "missing:C_state_order_coupling",
         "missing:D_area_contact_temperature"
@@ -217,7 +584,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "10100",
+      "mask": "110100",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:B_local_validation_schema",
@@ -228,7 +595,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "10101",
+      "mask": "110101",
       "mutations": [
         "missing:B_local_validation_schema",
         "missing:D_area_contact_temperature"
@@ -238,7 +605,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "10110",
+      "mask": "110110",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:D_area_contact_temperature"
@@ -248,7 +615,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "10111",
+      "mask": "110111",
       "mutations": [
         "missing:D_area_contact_temperature"
       ],
@@ -257,7 +624,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "11000",
+      "mask": "111000",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:B_local_validation_schema",
@@ -268,7 +635,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "11001",
+      "mask": "111001",
       "mutations": [
         "missing:B_local_validation_schema",
         "missing:C_state_order_coupling"
@@ -278,7 +645,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "11010",
+      "mask": "111010",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:C_state_order_coupling"
@@ -288,7 +655,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "11011",
+      "mask": "111011",
       "mutations": [
         "missing:C_state_order_coupling"
       ],
@@ -297,7 +664,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "11100",
+      "mask": "111100",
       "mutations": [
         "missing:A_facility_normalization",
         "missing:B_local_validation_schema"
@@ -307,7 +674,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "11101",
+      "mask": "111101",
       "mutations": [
         "missing:B_local_validation_schema"
       ],
@@ -316,7 +683,7 @@
     },
     {
       "failure_excerpt": "verifier reward 0.0",
-      "mask": "11110",
+      "mask": "111110",
       "mutations": [
         "missing:A_facility_normalization"
       ],
@@ -325,7 +692,7 @@
     },
     {
       "failure_excerpt": "",
-      "mask": "11111",
+      "mask": "111111",
       "mutations": [],
       "passes": true,
       "reward": 1.0
@@ -336,15 +703,16 @@
     "B_local_validation_schema",
     "C_state_order_coupling",
     "D_area_contact_temperature",
-    "E_contact_consistency"
+    "E_contact_consistency",
+    "F_radiation_boundary_coupling"
   ],
   "mode": "cluster-audit",
   "nop_reward": 0.0,
   "passed": true,
   "passing_masks": [
-    "11111"
+    "111111"
   ],
-  "states_evaluated": 32,
+  "states_evaluated": 64,
   "task": "thermal-stack-calibration",
   "wrong_fix_probe_rewards": {
     "all_T_to_K": 0.0,
@@ -355,6 +723,11 @@
     "global_comma": 0.0,
     "harmonic_only": 0.0,
     "loose_convergence": 0.0,
+    "radiation_celsius": 0.0,
+    "radiation_constant_ambient": 0.0,
+    "radiation_ignored": 0.0,
+    "radiation_replaces_convection": 0.0,
+    "radiation_wrong_surround": 0.0,
     "temp_coeff_uses_celsius": 0.0,
     "two_pass_only": 0.0
   },
@@ -405,6 +778,36 @@
       "failure_excerpt": "verifier reward 0.0",
       "passes": false,
       "probe": "loose_convergence",
+      "reward": 0.0
+    },
+    "radiation_celsius": {
+      "failure_excerpt": "verifier reward 0.0",
+      "passes": false,
+      "probe": "radiation_celsius",
+      "reward": 0.0
+    },
+    "radiation_constant_ambient": {
+      "failure_excerpt": "verifier reward 0.0",
+      "passes": false,
+      "probe": "radiation_constant_ambient",
+      "reward": 0.0
+    },
+    "radiation_ignored": {
+      "failure_excerpt": "verifier reward 0.0",
+      "passes": false,
+      "probe": "radiation_ignored",
+      "reward": 0.0
+    },
+    "radiation_replaces_convection": {
+      "failure_excerpt": "verifier reward 0.0",
+      "passes": false,
+      "probe": "radiation_replaces_convection",
+      "reward": 0.0
+    },
+    "radiation_wrong_surround": {
+      "failure_excerpt": "verifier reward 0.0",
+      "passes": false,
+      "probe": "radiation_wrong_surround",
       "reward": 0.0
     },
     "temp_coeff_uses_celsius": {

@@ -15,7 +15,7 @@ FILES = {
 "thermal_stack/__init__.py": r'''"""Thermal stack calibration solver package."""
 
 from .io import load_cases, load_materials, write_results
-from .models import Case, Contact, Facility, Layer, Material
+from .models import Case, Contact, Facility, Layer, Material, Radiation
 from .solver import solve_case
 
 __all__ = [
@@ -24,6 +24,7 @@ __all__ = [
     "Facility",
     "Layer",
     "Material",
+    "Radiation",
     "load_cases",
     "load_materials",
     "solve_case",
@@ -72,6 +73,13 @@ class Contact:
 
 
 @dataclass(frozen=True)
+class Radiation:
+    emissivity: float = 0.0
+    view_factor: float = 1.0
+    t_surround_c: float = 0.0
+
+
+@dataclass(frozen=True)
 class Facility:
     city: str
     region: str
@@ -93,6 +101,7 @@ class Case:
     service_age_days: int
     layers: tuple[Layer, ...]
     contacts: tuple[Contact, ...] = ()
+    right_radiation: Radiation = Radiation()
 
 
 def parse_scalar(value: Any) -> float:
@@ -208,6 +217,12 @@ def normalize_case_dict(raw_input: dict[str, Any]) -> dict[str, Any]:
                 "contact_t_ref_c": parse_scalar(contact.get("contact_t_ref_c", 25.0)),
             }
         )
+    radiation_raw = raw.get("right_radiation") or {}
+    radiation = {
+        "emissivity": parse_scalar(radiation_raw.get("emissivity", 0.0)),
+        "view_factor": parse_scalar(radiation_raw.get("view_factor", 1.0)),
+        "t_surround_c": temperature_to_c(radiation_raw.get("t_surround_c", raw["t_inf_c"]), temp_unit),
+    }
     return {
         "case_id": str(raw["case_id"]),
         "length_m": parse_scalar(raw["length_m"]) * unit_scale,
@@ -219,6 +234,7 @@ def normalize_case_dict(raw_input: dict[str, Any]) -> dict[str, Any]:
         "facility": normalized_facility,
         "layers": layers,
         "contacts": contacts,
+        "right_radiation": radiation,
     }
 
 
@@ -253,6 +269,14 @@ def contact_from_dict(raw: dict[str, Any]) -> Contact:
     )
 
 
+def radiation_from_dict(raw: dict[str, Any]) -> Radiation:
+    return Radiation(
+        emissivity=parse_scalar(raw.get("emissivity", 0.0)),
+        view_factor=parse_scalar(raw.get("view_factor", 1.0)),
+        t_surround_c=parse_scalar(raw.get("t_surround_c", 0.0)),
+    )
+
+
 def case_from_dict(raw_input: dict[str, Any], materials: dict[str, Material] | None = None) -> Case:
     raw = normalize_case_dict(raw_input)
     materials = _load_default_materials() if materials is None else materials
@@ -269,6 +293,7 @@ def case_from_dict(raw_input: dict[str, Any], materials: dict[str, Material] | N
         service_age_days=max(0, (facility.measured_on - facility.installed_on).days),
         layers=tuple(layer_from_dict(item, materials) for item in raw["layers"]),
         contacts=tuple(contact_from_dict(item) for item in raw.get("contacts", [])),
+        right_radiation=radiation_from_dict(raw.get("right_radiation", {})),
     )
 ''',
 "thermal_stack/io.py": r'''"""JSON and CSV input/output helpers."""
@@ -320,6 +345,7 @@ from .models import Case, Layer, Material
 
 KELVIN_OFFSET = 273.15
 AGE_CONTACT_RATE = 2.0e-5
+STEFAN_BOLTZMANN = 5.670374419e-8
 
 
 @dataclass(frozen=True)
@@ -394,6 +420,12 @@ def validate_case(case: Case) -> None:
             raise ValueError("contact interface must align to a cell face")
         if _face_index(contact.x_m, dx_m) not in internal_faces:
             raise ValueError("contact interface must be on an internal layer boundary")
+    if not (0.0 <= case.right_radiation.emissivity <= 1.0):
+        raise ValueError("radiation emissivity must be in [0, 1]")
+    if not (0.0 <= case.right_radiation.view_factor <= 1.0):
+        raise ValueError("radiation view_factor must be in [0, 1]")
+    if case.right_radiation.t_surround_c <= -KELVIN_OFFSET:
+        raise ValueError("radiation surround temperature must be above absolute zero")
 
 
 def _aged_contact(r_contact: float, service_age_days: int) -> float:
@@ -420,6 +452,34 @@ def _left_g(k_left: float, dx_m: float, area_m2: float) -> float:
 
 def _right_g(k_right: float, h_w_m2_k: float, dx_m: float, area_m2: float) -> float:
     return area_m2 / (dx_m / (2.0 * k_right) + 1.0 / h_w_m2_k)
+
+
+def _radiation_active(case: Case) -> bool:
+    return case.right_radiation.emissivity > 0.0 and case.right_radiation.view_factor > 0.0
+
+
+def _radiation_h(case: Case, surface_temp_c: float | None) -> float:
+    if not _radiation_active(case):
+        return 0.0
+    t_surface_k = KELVIN_OFFSET + (case.t_inf_c if surface_temp_c is None else surface_temp_c)
+    t_surround_k = KELVIN_OFFSET + case.right_radiation.t_surround_c
+    return (
+        case.right_radiation.emissivity
+        * case.right_radiation.view_factor
+        * STEFAN_BOLTZMANN
+        * (t_surface_k + t_surround_k)
+        * (t_surface_k * t_surface_k + t_surround_k * t_surround_k)
+    )
+
+
+def _right_boundary_state(case: Case, h_rad: float) -> tuple[float, float]:
+    if h_rad <= 0.0:
+        return case.h_w_m2_k, case.t_inf_c
+    h_total = case.h_w_m2_k + h_rad
+    t_effective = (
+        case.h_w_m2_k * case.t_inf_c + h_rad * case.right_radiation.t_surround_c
+    ) / h_total
+    return h_total, t_effective
 
 
 def build_mesh(case: Case, override_contacts: dict[int, float] | None = None) -> Mesh:
@@ -449,10 +509,11 @@ def build_mesh(case: Case, override_contacts: dict[int, float] | None = None) ->
     return Mesh(dx_m, x_values, k_values, q_values, face_contact_r, interfaces)
 
 
-def _assemble(case: Case, mesh: Mesh) -> tuple[np.ndarray, np.ndarray]:
+def _assemble(case: Case, mesh: Mesh, h_rad: float = 0.0) -> tuple[np.ndarray, np.ndarray]:
     n = case.num_cells
     matrix = np.zeros((n, n), dtype=float)
     rhs = np.zeros(n, dtype=float)
+    h_right, t_right_reference = _right_boundary_state(case, h_rad)
     for i in range(n):
         if i == 0:
             g_left = _left_g(mesh.k_w_m_k[i], mesh.dx_m, case.area_m2)
@@ -469,9 +530,9 @@ def _assemble(case: Case, mesh: Mesh) -> tuple[np.ndarray, np.ndarray]:
             matrix[i, i] += g_west
             matrix[i, i - 1] -= g_west
         if i == n - 1:
-            g_right = _right_g(mesh.k_w_m_k[i], case.h_w_m2_k, mesh.dx_m, case.area_m2)
+            g_right = _right_g(mesh.k_w_m_k[i], h_right, mesh.dx_m, case.area_m2)
             matrix[i, i] += g_right
-            rhs[i] += g_right * case.t_inf_c
+            rhs[i] += g_right * t_right_reference
         else:
             g_east = _internal_g(
                 mesh.k_w_m_k[i],
@@ -512,28 +573,47 @@ def _interface_diagnostics(case: Case, mesh: Mesh, temperatures: np.ndarray) -> 
     return diagnostics
 
 
-def _solve_core(case: Case, override_contacts: dict[int, float] | None = None) -> tuple:
+def _solve_core(
+    case: Case,
+    override_contacts: dict[int, float] | None = None,
+    right_surface_temp_c: float | None = None,
+) -> tuple:
     mesh = build_mesh(case, override_contacts=override_contacts)
-    matrix, rhs = _assemble(case, mesh)
+    h_rad = _radiation_h(case, right_surface_temp_c)
+    matrix, rhs = _assemble(case, mesh, h_rad=h_rad)
     temperatures = np.linalg.solve(matrix, rhs)
-    return mesh, temperatures
+    h_right, t_right_reference = _right_boundary_state(case, h_rad)
+    right_flow = _right_g(mesh.k_w_m_k[-1], h_right, mesh.dx_m, case.area_m2) * (
+        float(temperatures[-1]) - t_right_reference
+    )
+    right_surface_c = float(temperatures[-1]) - right_flow * mesh.dx_m / (
+        2.0 * mesh.k_w_m_k[-1] * case.area_m2
+    )
+    return mesh, temperatures, right_surface_c, h_rad
 
 
 def solve_case(case: Case) -> dict[str, Any]:
     has_temp_dependent = any(
         c.contact_temp_coeff_per_k != 0.0 for c in case.contacts
     )
-    if not has_temp_dependent:
-        mesh, temperatures = _solve_core(case)
+    has_radiation = _radiation_active(case)
+    if not has_temp_dependent and not has_radiation:
+        mesh, temperatures, right_surface_c, h_rad = _solve_core(case)
     else:
         dx = case.length_m / case.num_cells
         reff: dict[int, float] = {}
         for c in case.contacts:
             f = _face_index(c.x_m, dx)
             reff[f] = _aged_contact(c.r_contact_m2_k_w, case.service_age_days)
+        right_surface_c: float | None = None
+        h_rad = 0.0
 
-        for _ in range(50):
-            mesh, temperatures = _solve_core(case, override_contacts=reff)
+        for _ in range(80):
+            mesh, temperatures, solved_surface_c, h_rad = _solve_core(
+                case,
+                override_contacts=reff,
+                right_surface_temp_c=right_surface_c,
+            )
             diagnostics = _interface_diagnostics(case, mesh, temperatures)
             diag_by_face = {_face_index(d["x_m"], dx): d for d in diagnostics}
             new_reff = dict(reff)
@@ -553,14 +633,26 @@ def solve_case(case: Case) -> dict[str, Any]:
                 )
                 max_rel = max(max_rel, abs(rn - reff.get(f, 0.0)) / max(abs(reff.get(f, 0.0)), 1e-12))
                 new_reff[f] = rn
+            previous_surface = case.t_inf_c if right_surface_c is None else right_surface_c
+            if has_radiation:
+                max_rel = max(
+                    max_rel,
+                    abs(solved_surface_c - previous_surface) / max(abs(solved_surface_c), 1.0),
+                )
             reff = new_reff
+            right_surface_c = solved_surface_c
             if max_rel < 1e-6:
                 break
-        mesh, temperatures = _solve_core(case, override_contacts=reff)
+        mesh, temperatures, right_surface_c, h_rad = _solve_core(
+            case,
+            override_contacts=reff,
+            right_surface_temp_c=right_surface_c,
+        )
 
     left_flow = _left_g(mesh.k_w_m_k[0], mesh.dx_m, case.area_m2) * (case.t_left_c - float(temperatures[0]))
-    right_flow = _right_g(mesh.k_w_m_k[-1], case.h_w_m2_k, mesh.dx_m, case.area_m2) * (
-        float(temperatures[-1]) - case.t_inf_c
+    h_right, t_right_reference = _right_boundary_state(case, h_rad)
+    right_flow = _right_g(mesh.k_w_m_k[-1], h_right, mesh.dx_m, case.area_m2) * (
+        float(temperatures[-1]) - t_right_reference
     )
     source_total = sum(q * mesh.dx_m * case.area_m2 for q in mesh.q_w_m3)
     energy_residual = right_flow - left_flow - source_total

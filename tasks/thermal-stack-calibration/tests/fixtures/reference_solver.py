@@ -15,6 +15,7 @@ import numpy as np
 
 KELVIN_OFFSET = 273.15
 AGE_CONTACT_RATE = 2.0e-5
+STEFAN_BOLTZMANN = 5.670374419e-8
 TASK_DIR = Path(__file__).resolve().parents[2]
 APP_DATA = Path(os.environ["APP_DIR"]) / "data" if "APP_DIR" in os.environ else TASK_DIR / "environment" / "app" / "data"
 
@@ -129,6 +130,15 @@ def normalize_case(raw_case: dict[str, Any], materials: dict[str, dict[str, Any]
                 "contact_t_ref_c": parse_scalar(contact.get("contact_t_ref_c", 25.0)),
             }
         )
+    radiation_raw = raw.get("right_radiation") or {}
+    radiation = {
+        "emissivity": parse_scalar(radiation_raw.get("emissivity", 0.0)),
+        "view_factor": parse_scalar(radiation_raw.get("view_factor", 1.0)),
+        "t_surround_c": normalize_temperature_to_c(
+            radiation_raw.get("t_surround_c", raw["t_inf_c"]),
+            temp_unit,
+        ),
+    }
     return {
         "case_id": str(raw["case_id"]),
         "length_m": parse_scalar(raw["length_m"]) * unit_scale,
@@ -142,6 +152,7 @@ def normalize_case(raw_case: dict[str, Any], materials: dict[str, dict[str, Any]
         "service_age_days": max(0, (measured - installed).days),
         "layers": layers,
         "contacts": contacts,
+        "right_radiation": radiation,
     }
 
 
@@ -197,6 +208,16 @@ def _validate(case: dict[str, Any]) -> None:
             raise ValueError("unaligned contact")
         if _face_index(contact["x_m"], dx) not in internal_faces:
             raise ValueError("contact location")
+    radiation = case.get("right_radiation", {})
+    emissivity = radiation.get("emissivity", 0.0)
+    view_factor = radiation.get("view_factor", 1.0)
+    t_surround_c = radiation.get("t_surround_c", case["t_inf_c"])
+    if not (0.0 <= emissivity <= 1.0):
+        raise ValueError("bad radiation emissivity")
+    if not (0.0 <= view_factor <= 1.0):
+        raise ValueError("bad radiation view factor")
+    if t_surround_c <= -KELVIN_OFFSET:
+        raise ValueError("bad radiation surround temperature")
 
 
 def _layer_at_center(layers: list[dict[str, Any]], x_m: float) -> dict[str, Any]:
@@ -234,9 +255,39 @@ def _right_g(k_right: float, h: float, dx_m: float, area_m2: float) -> float:
     return area_m2 / (dx_m / (2.0 * k_right) + 1.0 / h)
 
 
+def _radiation_active(case: dict[str, Any]) -> bool:
+    radiation = case.get("right_radiation", {})
+    return radiation.get("emissivity", 0.0) > 0.0 and radiation.get("view_factor", 1.0) > 0.0
+
+
+def _radiation_h(case: dict[str, Any], surface_temp_c: float | None) -> float:
+    if not _radiation_active(case):
+        return 0.0
+    radiation = case["right_radiation"]
+    t_surface_k = KELVIN_OFFSET + (case["t_inf_c"] if surface_temp_c is None else surface_temp_c)
+    t_surround_k = KELVIN_OFFSET + radiation["t_surround_c"]
+    return (
+        radiation["emissivity"]
+        * radiation["view_factor"]
+        * STEFAN_BOLTZMANN
+        * (t_surface_k + t_surround_k)
+        * (t_surface_k * t_surface_k + t_surround_k * t_surround_k)
+    )
+
+
+def _right_boundary_state(case: dict[str, Any], h_rad: float) -> tuple[float, float]:
+    h_conv = case["h_w_m2_k"]
+    if h_rad <= 0.0:
+        return h_conv, case["t_inf_c"]
+    h_total = h_conv + h_rad
+    t_effective = (h_conv * case["t_inf_c"] + h_rad * case["right_radiation"]["t_surround_c"]) / h_total
+    return h_total, t_effective
+
+
 def _solve_core(
     case: dict[str, Any],
     contact_resistances: dict[int, float] | None = None,
+    right_surface_temp_c: float | None = None,
 ) -> dict[str, Any]:
     """Solve once using the given contact resistances (or defaults from aged contacts)."""
     length = case["length_m"]
@@ -269,8 +320,8 @@ def _solve_core(
     matrix = np.zeros((n, n), dtype=float)
     rhs = np.zeros(n, dtype=float)
     t_left = case["t_left_c"]
-    t_inf = case["t_inf_c"]
-    h = case["h_w_m2_k"]
+    h_rad = _radiation_h(case, right_surface_temp_c)
+    h_right, t_right_reference = _right_boundary_state(case, h_rad)
     for i in range(n):
         if i == 0:
             g_left = _left_g(k_values[i], dx, area)
@@ -281,9 +332,9 @@ def _solve_core(
             matrix[i, i] += g_west
             matrix[i, i - 1] -= g_west
         if i == n - 1:
-            g_right = _right_g(k_values[i], h, dx, area)
+            g_right = _right_g(k_values[i], h_right, dx, area)
             matrix[i, i] += g_right
-            rhs[i] += g_right * t_inf
+            rhs[i] += g_right * t_right_reference
         else:
             g_east = _internal_g(k_values[i], k_values[i + 1], face_contact[i], dx, area)
             matrix[i, i] += g_east
@@ -312,7 +363,8 @@ def _solve_core(
             }
         )
     left_flow = _left_g(k_values[0], dx, area) * (t_left - float(temperatures[0]))
-    right_flow = _right_g(k_values[-1], h, dx, area) * (float(temperatures[-1]) - t_inf)
+    right_flow = _right_g(k_values[-1], h_right, dx, area) * (float(temperatures[-1]) - t_right_reference)
+    right_surface_c = float(temperatures[-1]) - right_flow * dx / (2.0 * k_values[-1] * area)
     source_total = sum(q * dx * area for q in q_values)
     energy_residual = right_flow - left_flow - source_total
     return {
@@ -329,6 +381,8 @@ def _solve_core(
         "_energy_residual_w": float(energy_residual),
         "_dx": dx,
         "_k_values": k_values,
+        "_right_surface_c": float(right_surface_c),
+        "_right_h_rad_w_m2_k": float(h_rad),
     }
 
 
@@ -339,7 +393,8 @@ def solve_case(raw_case: dict[str, Any]) -> dict[str, Any]:
     # Fixed-point iteration for temperature-dependent contact resistance
     cs = case.get("contacts", [])
     has_temp_dependent = any(c.get("contact_temp_coeff_per_k", 0.0) != 0.0 for c in cs)
-    if not has_temp_dependent:
+    has_radiation = _radiation_active(case)
+    if not has_temp_dependent and not has_radiation:
         result = _solve_core(case)
         return {k: v for k, v in result.items() if not k.startswith("_")}
 
@@ -348,9 +403,10 @@ def solve_case(raw_case: dict[str, Any]) -> dict[str, Any]:
     for c in cs:
         f = _face_index(c["x_m"], dx)
         reff[f] = _aged_contact(c["r_contact_m2_k_w"], case["service_age_days"])
+    right_surface_c: float | None = None
 
-    for _ in range(50):
-        result = _solve_core(case, contact_resistances=reff)
+    for _ in range(80):
+        result = _solve_core(case, contact_resistances=reff, right_surface_temp_c=right_surface_c)
         diag_by_face = {_face_index(d["x_m"], dx): d for d in result["interface_diagnostics"]}
         new_reff = dict(reff)
         max_rel = 0.0
@@ -369,11 +425,20 @@ def solve_case(raw_case: dict[str, Any]) -> dict[str, Any]:
             )
             max_rel = max(max_rel, abs(rn - reff[f]) / max(abs(reff[f]), 1e-12))
             new_reff[f] = rn
+        previous_surface = case["t_inf_c"] if right_surface_c is None else right_surface_c
+        new_surface = result["_right_surface_c"] if has_radiation else right_surface_c
+        if has_radiation:
+            max_rel = max(
+                max_rel,
+                abs(new_surface - previous_surface)
+                / max(abs(new_surface), 1.0),
+            )
         reff = new_reff
+        right_surface_c = new_surface
         if max_rel < 1e-6:
             break
 
-    result = _solve_core(case, contact_resistances=reff)
+    result = _solve_core(case, contact_resistances=reff, right_surface_temp_c=right_surface_c)
     return {k: v for k, v in result.items() if not k.startswith("_")}
 
 
@@ -420,7 +485,7 @@ def check_physical_invariants(raw_case: dict[str, Any], result: dict[str, Any]) 
             if a + 1e-9 < b:
                 failures.append("no-source temperature profile is not monotone")
                 break
-    if len(normalized["layers"]) == 1 and source_total == 0.0:
+    if len(normalized["layers"]) == 1 and source_total == 0.0 and not _radiation_active(normalized):
         expected_temps = analytic_constant_k_no_source(raw_case, result["x_m"])
         for actual, expected in zip(temps, expected_temps):
             if not math.isclose(actual, expected, rel_tol=0.0, abs_tol=5e-4):

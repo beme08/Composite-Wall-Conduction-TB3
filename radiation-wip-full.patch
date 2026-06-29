@@ -1,0 +1,1668 @@
+diff --git a/tasks/thermal-stack-calibration/environment/app/data/approved_outputs.json b/tasks/thermal-stack-calibration/environment/app/data/approved_outputs.json
+index 7612b8b..b822252 100644
+--- a/tasks/thermal-stack-calibration/environment/app/data/approved_outputs.json
++++ b/tasks/thermal-stack-calibration/environment/app/data/approved_outputs.json
+@@ -607,6 +607,50 @@
+       "right_heat_flux_w_m2": 543.7291606569703,
+       "max_temperature_c": 97.16857183108247,
+       "energy_residual_w_m2": 2.9558577807620168e-12
++    },
++    {
++      "case_id": "cal_radiative_boundary_public",
++      "x_m": [
++        0.0025,
++        0.0075,
++        0.0125,
++        0.0175,
++        0.0225,
++        0.0275,
++        0.0325,
++        0.0375,
++        0.0425,
++        0.0475,
++        0.0525,
++        0.0575,
++        0.0625,
++        0.0675,
++        0.0725,
++        0.0775
++      ],
++      "temperature_c": [
++        83.1543367627079,
++        81.46301028812368,
++        79.77168381353945,
++        78.08035733895525,
++        76.38903086437104,
++        74.69770438978682,
++        73.00637791520259,
++        71.31505144061838,
++        69.62372496603416,
++        67.93239849144994,
++        66.24107201686573,
++        64.54974554228151,
++        62.858419067697305,
++        61.1670925931131,
++        59.475766118528895,
++        57.7844396439447
++      ],
++      "interface_diagnostics": [],
++      "left_heat_flux_w_m2": 811.8367078004167,
++      "right_heat_flux_w_m2": 811.8367078004113,
++      "max_temperature_c": 83.1543367627079,
++      "energy_residual_w_m2": -5.343281372915953e-12
+     }
+   ]
+ }
+diff --git a/tasks/thermal-stack-calibration/environment/app/data/calibration_cases.json b/tasks/thermal-stack-calibration/environment/app/data/calibration_cases.json
+index a124a01..baa1eb6 100644
+--- a/tasks/thermal-stack-calibration/environment/app/data/calibration_cases.json
++++ b/tasks/thermal-stack-calibration/environment/app/data/calibration_cases.json
+@@ -174,6 +174,20 @@
+       "contacts": [
+         {"x_m": 0.05, "r_contact_m2_k_w": 0.018, "contact_temp_coeff_per_k": 0.025, "contact_t_ref_c": 25.0}
+       ]
++    },
++    {
++      "case_id": "cal_radiative_boundary_public",
++      "length_m": 0.08,
++      "num_cells": 16,
++      "area_m2": 1.0,
++      "t_left_c": 84.0,
++      "t_inf_c": 24.0,
++      "h_w_m2_k": 20.0,
++      "facility": {"city": "Austin", "region": "TX", "country": "US", "installed_on": "01/10/2026", "measured_on": "02/20/2026"},
++      "right_radiation": {"emissivity": 0.72, "view_factor": 0.80, "t_surround_c": 18.0},
++      "layers": [
++        {"name": "radiation_probe", "x_start_m": 0.0, "x_end_m": 0.08, "material_id": "flat_ceramic", "q_w_m3": 0.0}
++      ]
+     }
+   ]
+ }
+diff --git a/tasks/thermal-stack-calibration/environment/app/docs/engineering_notes.md b/tasks/thermal-stack-calibration/environment/app/docs/engineering_notes.md
+index 9fa4e9d..b7a0ed7 100644
+--- a/tasks/thermal-stack-calibration/environment/app/docs/engineering_notes.md
++++ b/tasks/thermal-stack-calibration/environment/app/docs/engineering_notes.md
+@@ -61,10 +61,32 @@ The right boundary is a convection boundary to `t_inf_c`. It is not a fixed
+ temperature cell. Stronger `h_w_m2_k` pulls the right-side temperature closer to
+ the ambient; weaker `h_w_m2_k` increases the thermal resistance to ambient.
+ 
++Some qualification setups also exchange radiation between the right surface and
++nearby surroundings. The radiative film is in parallel with the convective film,
++but the surrounding radiation temperature may differ from the ambient fluid
++temperature. Use the Stefan-Boltzmann linearization for a surface-temperature
++estimate `T_s` and surrounding temperature `T_sur`, both in kelvin:
++
++```text
++h_rad = emissivity * view_factor * sigma * (T_s + T_sur) * (T_s^2 + T_sur^2)
++```
++
++Then combine the two surface films as:
++
++```text
++h_total = h_conv + h_rad
++T_reference = (h_conv * T_inf + h_rad * T_sur) / h_total
++```
++
++The approved report requires the final right-surface temperature used for
++`h_rad` to be consistent with the heat flux produced by the linearized solve.
++Zero-emissivity cases reduce to convection only.
++
+ ## Calibration Guidance
+ 
+ Use `/app/data/calibration_cases.json` and `/app/data/approved_outputs.json` to
+ calibrate the implementation. The cases exercise single-layer conduction,
+ volumetric heating, material contrast, contact temperature drops, and convection
+-sensitivity. A repair that only matches those case IDs without implementing the
++sensitivity. Some visible cases only probe the presence of optional schema
++fields; a repair that only matches those case IDs without implementing the
+ general model will fail hidden qualification cases.
+diff --git a/tasks/thermal-stack-calibration/environment/app/thermal_stack/models.py b/tasks/thermal-stack-calibration/environment/app/thermal_stack/models.py
+index d2b0b93..46dc392 100644
+--- a/tasks/thermal-stack-calibration/environment/app/thermal_stack/models.py
++++ b/tasks/thermal-stack-calibration/environment/app/thermal_stack/models.py
+@@ -96,7 +96,7 @@ def parse_facility_date(value: Any, facility: dict[str, Any]) -> date:
+         "phoenix",
+         "boston",
+     }
+-    return datetime.strptime(text, "%m/%d/%Y").date()
++    return datetime.strptime(text, "%m/%d/%Y" if us_context else "%d/%m/%Y").date()
+ 
+ 
+ def temperature_to_c(value: Any, unit: str) -> float:
+diff --git a/tasks/thermal-stack-calibration/instruction.md b/tasks/thermal-stack-calibration/instruction.md
+index 932da10..390a430 100644
+--- a/tasks/thermal-stack-calibration/instruction.md
++++ b/tasks/thermal-stack-calibration/instruction.md
+@@ -53,6 +53,7 @@ Each case has:
+ - optional `temperature_unit`, defaulting to `"C"` (use `"C"` for Celsius, `"K"` for Kelvin)
+ - optional `length_unit`, defaulting to `"m"` (use `"m"` for metres, `"mm"` for millimetres)
+ - optional `contacts`
++- optional `right_radiation`
+ 
+ Numeric fields may arrive as strings using facility-local formatting (e.g.,
+ decimal commas may represent decimal points). Unit normalization and number
+@@ -75,6 +76,16 @@ Each contact has:
+ A missing contact at an internal layer boundary means ordinary material
+ continuity with zero added contact resistance.
+ 
++`right_radiation`, when present, describes radiative exchange at the right
++surface in parallel with the convective film:
++
++- `emissivity`, defaulting to `0.0`
++- `view_factor`, defaulting to `1.0`
++- `t_surround_c`, defaulting to `t_inf_c`
++
++Temperature normalization applies to `t_surround_c` the same way it applies to
++the other case temperature fields.
++
+ ## Normalization Contract
+ 
+ The case-normalization path is part of the qualification tool contract. Given a
+@@ -108,6 +119,20 @@ contacts and is intended to reveal the required treatment; a careful audit
+ of consistency diagnostics on the calibration outputs will show the nature
+ of the contact-temperature interaction.
+ 
++## Right-Side Radiative Exchange
++
++Some qualification cases include radiation from the right surface to nearby
++surroundings. Treat that radiative exchange as a nonlinear surface loss in
++parallel with convection, and make the right-surface temperature, radiative
++film coefficient, boundary heat flux, contact corrections, and energy balance
++mutually consistent in the final reported solution.
++
++For a linearized solve, the equivalent radiative coefficient is based on the
++current right-surface temperature estimate and the surrounding temperature.
++The radiative and convective films share the same right surface but may reject
++heat to different reference temperatures. Cases with zero emissivity reduce to
++the ordinary convection-only boundary.
++
+ ## Geometry And Validation
+ 
+ The stack spans `x` in `[0, L]` and is represented by `N` uniform
+@@ -130,6 +155,8 @@ Reject invalid cases:
+ - gaps exist between layers
+ - internal layer/contact boundaries are not aligned to cell faces
+ - contact resistance is negative
++- radiation emissivity is outside `[0, 1]`
++- radiation view factor is outside `[0, 1]`
+ - contact interface is not located on an internal layer boundary and cell face
+ 
+ ## Qualification Behavior
+@@ -147,6 +174,7 @@ behaviors:
+ - high-contrast material interface behavior
+ - fixed-temperature behavior at the left boundary
+ - convective, not fixed-temperature, behavior at the right boundary
++- optional radiative right-boundary losses coupled to the right-surface temperature
+ - consistent boundary fluxes, interface diagnostics, and energy balance
+ 
+ Physical invariants that should hold for valid outputs:
+@@ -157,6 +185,7 @@ Physical invariants that should hold for valid outputs:
+ - nonzero contact resistance may create a temperature drop at the interface
+ - heat flux through an internal interface is single-valued
+ - right boundary behavior changes with `h_w_m2_k`
++- right radiation changes the boundary heat flux when emissivity is nonzero
+ - volumetric generation changes both the temperature field and the global
+   energy balance
+ - the reported energy residual should be close to zero for the approved model
+diff --git a/tasks/thermal-stack-calibration/solution/solve.sh b/tasks/thermal-stack-calibration/solution/solve.sh
+index 8dd3fba..04b2b2b 100755
+--- a/tasks/thermal-stack-calibration/solution/solve.sh
++++ b/tasks/thermal-stack-calibration/solution/solve.sh
+@@ -15,7 +15,7 @@ FILES = {
+ "thermal_stack/__init__.py": r'''"""Thermal stack calibration solver package."""
+ 
+ from .io import load_cases, load_materials, write_results
+-from .models import Case, Contact, Facility, Layer, Material
++from .models import Case, Contact, Facility, Layer, Material, Radiation
+ from .solver import solve_case
+ 
+ __all__ = [
+@@ -24,6 +24,7 @@ __all__ = [
+     "Facility",
+     "Layer",
+     "Material",
++    "Radiation",
+     "load_cases",
+     "load_materials",
+     "solve_case",
+@@ -71,6 +72,13 @@ class Contact:
+     contact_t_ref_c: float = 25.0
+ 
+ 
++@dataclass(frozen=True)
++class Radiation:
++    emissivity: float = 0.0
++    view_factor: float = 1.0
++    t_surround_c: float = 0.0
++
++
+ @dataclass(frozen=True)
+ class Facility:
+     city: str
+@@ -93,6 +101,7 @@ class Case:
+     service_age_days: int
+     layers: tuple[Layer, ...]
+     contacts: tuple[Contact, ...] = ()
++    right_radiation: Radiation = Radiation()
+ 
+ 
+ def parse_scalar(value: Any) -> float:
+@@ -208,6 +217,12 @@ def normalize_case_dict(raw_input: dict[str, Any]) -> dict[str, Any]:
+                 "contact_t_ref_c": parse_scalar(contact.get("contact_t_ref_c", 25.0)),
+             }
+         )
++    radiation_raw = raw.get("right_radiation") or {}
++    radiation = {
++        "emissivity": parse_scalar(radiation_raw.get("emissivity", 0.0)),
++        "view_factor": parse_scalar(radiation_raw.get("view_factor", 1.0)),
++        "t_surround_c": temperature_to_c(radiation_raw.get("t_surround_c", raw["t_inf_c"]), temp_unit),
++    }
+     return {
+         "case_id": str(raw["case_id"]),
+         "length_m": parse_scalar(raw["length_m"]) * unit_scale,
+@@ -219,6 +234,7 @@ def normalize_case_dict(raw_input: dict[str, Any]) -> dict[str, Any]:
+         "facility": normalized_facility,
+         "layers": layers,
+         "contacts": contacts,
++        "right_radiation": radiation,
+     }
+ 
+ 
+@@ -253,6 +269,14 @@ def contact_from_dict(raw: dict[str, Any]) -> Contact:
+     )
+ 
+ 
++def radiation_from_dict(raw: dict[str, Any]) -> Radiation:
++    return Radiation(
++        emissivity=parse_scalar(raw.get("emissivity", 0.0)),
++        view_factor=parse_scalar(raw.get("view_factor", 1.0)),
++        t_surround_c=parse_scalar(raw.get("t_surround_c", 0.0)),
++    )
++
++
+ def case_from_dict(raw_input: dict[str, Any], materials: dict[str, Material] | None = None) -> Case:
+     raw = normalize_case_dict(raw_input)
+     materials = _load_default_materials() if materials is None else materials
+@@ -269,6 +293,7 @@ def case_from_dict(raw_input: dict[str, Any], materials: dict[str, Material] | N
+         service_age_days=max(0, (facility.measured_on - facility.installed_on).days),
+         layers=tuple(layer_from_dict(item, materials) for item in raw["layers"]),
+         contacts=tuple(contact_from_dict(item) for item in raw.get("contacts", [])),
++        right_radiation=radiation_from_dict(raw.get("right_radiation", {})),
+     )
+ ''',
+ "thermal_stack/io.py": r'''"""JSON and CSV input/output helpers."""
+@@ -320,6 +345,7 @@ from .models import Case, Layer, Material
+ 
+ KELVIN_OFFSET = 273.15
+ AGE_CONTACT_RATE = 2.0e-5
++STEFAN_BOLTZMANN = 5.670374419e-8
+ 
+ 
+ @dataclass(frozen=True)
+@@ -394,6 +420,12 @@ def validate_case(case: Case) -> None:
+             raise ValueError("contact interface must align to a cell face")
+         if _face_index(contact.x_m, dx_m) not in internal_faces:
+             raise ValueError("contact interface must be on an internal layer boundary")
++    if not (0.0 <= case.right_radiation.emissivity <= 1.0):
++        raise ValueError("radiation emissivity must be in [0, 1]")
++    if not (0.0 <= case.right_radiation.view_factor <= 1.0):
++        raise ValueError("radiation view_factor must be in [0, 1]")
++    if case.right_radiation.t_surround_c <= -KELVIN_OFFSET:
++        raise ValueError("radiation surround temperature must be above absolute zero")
+ 
+ 
+ def _aged_contact(r_contact: float, service_age_days: int) -> float:
+@@ -422,6 +454,34 @@ def _right_g(k_right: float, h_w_m2_k: float, dx_m: float, area_m2: float) -> fl
+     return area_m2 / (dx_m / (2.0 * k_right) + 1.0 / h_w_m2_k)
+ 
+ 
++def _radiation_active(case: Case) -> bool:
++    return case.right_radiation.emissivity > 0.0 and case.right_radiation.view_factor > 0.0
++
++
++def _radiation_h(case: Case, surface_temp_c: float | None) -> float:
++    if not _radiation_active(case):
++        return 0.0
++    t_surface_k = KELVIN_OFFSET + (case.t_inf_c if surface_temp_c is None else surface_temp_c)
++    t_surround_k = KELVIN_OFFSET + case.right_radiation.t_surround_c
++    return (
++        case.right_radiation.emissivity
++        * case.right_radiation.view_factor
++        * STEFAN_BOLTZMANN
++        * (t_surface_k + t_surround_k)
++        * (t_surface_k * t_surface_k + t_surround_k * t_surround_k)
++    )
++
++
++def _right_boundary_state(case: Case, h_rad: float) -> tuple[float, float]:
++    if h_rad <= 0.0:
++        return case.h_w_m2_k, case.t_inf_c
++    h_total = case.h_w_m2_k + h_rad
++    t_effective = (
++        case.h_w_m2_k * case.t_inf_c + h_rad * case.right_radiation.t_surround_c
++    ) / h_total
++    return h_total, t_effective
++
++
+ def build_mesh(case: Case, override_contacts: dict[int, float] | None = None) -> Mesh:
+     validate_case(case)
+     dx_m = case.length_m / case.num_cells
+@@ -449,10 +509,11 @@ def build_mesh(case: Case, override_contacts: dict[int, float] | None = None) ->
+     return Mesh(dx_m, x_values, k_values, q_values, face_contact_r, interfaces)
+ 
+ 
+-def _assemble(case: Case, mesh: Mesh) -> tuple[np.ndarray, np.ndarray]:
++def _assemble(case: Case, mesh: Mesh, h_rad: float = 0.0) -> tuple[np.ndarray, np.ndarray]:
+     n = case.num_cells
+     matrix = np.zeros((n, n), dtype=float)
+     rhs = np.zeros(n, dtype=float)
++    h_right, t_right_reference = _right_boundary_state(case, h_rad)
+     for i in range(n):
+         if i == 0:
+             g_left = _left_g(mesh.k_w_m_k[i], mesh.dx_m, case.area_m2)
+@@ -469,9 +530,9 @@ def _assemble(case: Case, mesh: Mesh) -> tuple[np.ndarray, np.ndarray]:
+             matrix[i, i] += g_west
+             matrix[i, i - 1] -= g_west
+         if i == n - 1:
+-            g_right = _right_g(mesh.k_w_m_k[i], case.h_w_m2_k, mesh.dx_m, case.area_m2)
++            g_right = _right_g(mesh.k_w_m_k[i], h_right, mesh.dx_m, case.area_m2)
+             matrix[i, i] += g_right
+-            rhs[i] += g_right * case.t_inf_c
++            rhs[i] += g_right * t_right_reference
+         else:
+             g_east = _internal_g(
+                 mesh.k_w_m_k[i],
+@@ -512,28 +573,47 @@ def _interface_diagnostics(case: Case, mesh: Mesh, temperatures: np.ndarray) ->
+     return diagnostics
+ 
+ 
+-def _solve_core(case: Case, override_contacts: dict[int, float] | None = None) -> tuple:
++def _solve_core(
++    case: Case,
++    override_contacts: dict[int, float] | None = None,
++    right_surface_temp_c: float | None = None,
++) -> tuple:
+     mesh = build_mesh(case, override_contacts=override_contacts)
+-    matrix, rhs = _assemble(case, mesh)
++    h_rad = _radiation_h(case, right_surface_temp_c)
++    matrix, rhs = _assemble(case, mesh, h_rad=h_rad)
+     temperatures = np.linalg.solve(matrix, rhs)
+-    return mesh, temperatures
++    h_right, t_right_reference = _right_boundary_state(case, h_rad)
++    right_flow = _right_g(mesh.k_w_m_k[-1], h_right, mesh.dx_m, case.area_m2) * (
++        float(temperatures[-1]) - t_right_reference
++    )
++    right_surface_c = float(temperatures[-1]) - right_flow * mesh.dx_m / (
++        2.0 * mesh.k_w_m_k[-1] * case.area_m2
++    )
++    return mesh, temperatures, right_surface_c, h_rad
+ 
+ 
+ def solve_case(case: Case) -> dict[str, Any]:
+     has_temp_dependent = any(
+         c.contact_temp_coeff_per_k != 0.0 for c in case.contacts
+     )
+-    if not has_temp_dependent:
+-        mesh, temperatures = _solve_core(case)
++    has_radiation = _radiation_active(case)
++    if not has_temp_dependent and not has_radiation:
++        mesh, temperatures, right_surface_c, h_rad = _solve_core(case)
+     else:
+         dx = case.length_m / case.num_cells
+         reff: dict[int, float] = {}
+         for c in case.contacts:
+             f = _face_index(c.x_m, dx)
+             reff[f] = _aged_contact(c.r_contact_m2_k_w, case.service_age_days)
+-
+-        for _ in range(50):
+-            mesh, temperatures = _solve_core(case, override_contacts=reff)
++        right_surface_c: float | None = None
++        h_rad = 0.0
++
++        for _ in range(80):
++            mesh, temperatures, solved_surface_c, h_rad = _solve_core(
++                case,
++                override_contacts=reff,
++                right_surface_temp_c=right_surface_c,
++            )
+             diagnostics = _interface_diagnostics(case, mesh, temperatures)
+             diag_by_face = {_face_index(d["x_m"], dx): d for d in diagnostics}
+             new_reff = dict(reff)
+@@ -553,14 +633,26 @@ def solve_case(case: Case) -> dict[str, Any]:
+                 )
+                 max_rel = max(max_rel, abs(rn - reff.get(f, 0.0)) / max(abs(reff.get(f, 0.0)), 1e-12))
+                 new_reff[f] = rn
++            previous_surface = case.t_inf_c if right_surface_c is None else right_surface_c
++            if has_radiation:
++                max_rel = max(
++                    max_rel,
++                    abs(solved_surface_c - previous_surface) / max(abs(solved_surface_c), 1.0),
++                )
+             reff = new_reff
++            right_surface_c = solved_surface_c
+             if max_rel < 1e-6:
+                 break
+-        mesh, temperatures = _solve_core(case, override_contacts=reff)
++        mesh, temperatures, right_surface_c, h_rad = _solve_core(
++            case,
++            override_contacts=reff,
++            right_surface_temp_c=right_surface_c,
++        )
+ 
+     left_flow = _left_g(mesh.k_w_m_k[0], mesh.dx_m, case.area_m2) * (case.t_left_c - float(temperatures[0]))
+-    right_flow = _right_g(mesh.k_w_m_k[-1], case.h_w_m2_k, mesh.dx_m, case.area_m2) * (
+-        float(temperatures[-1]) - case.t_inf_c
++    h_right, t_right_reference = _right_boundary_state(case, h_rad)
++    right_flow = _right_g(mesh.k_w_m_k[-1], h_right, mesh.dx_m, case.area_m2) * (
++        float(temperatures[-1]) - t_right_reference
+     )
+     source_total = sum(q * mesh.dx_m * case.area_m2 for q in mesh.q_w_m3)
+     energy_residual = right_flow - left_flow - source_total
+diff --git a/tasks/thermal-stack-calibration/tests/fixtures/audit_report.json b/tasks/thermal-stack-calibration/tests/fixtures/audit_report.json
+index 20fa2c2..83cf31c 100644
+--- a/tasks/thermal-stack-calibration/tests/fixtures/audit_report.json
++++ b/tasks/thermal-stack-calibration/tests/fixtures/audit_report.json
+@@ -3,15 +3,370 @@
+   "cluster_states": [
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "00000",
++      "mask": "000000",
+       "mutations": [],
+       "passes": false,
+       "reward": 0.0
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "00001",
++      "mask": "000001",
+       "mutations": [
++        "missing:B_local_validation_schema",
++        "missing:C_state_order_coupling",
++        "missing:D_area_contact_temperature",
++        "missing:E_contact_consistency",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "000010",
++      "mutations": [
++        "missing:A_facility_normalization",
++        "missing:C_state_order_coupling",
++        "missing:D_area_contact_temperature",
++        "missing:E_contact_consistency",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "000011",
++      "mutations": [
++        "missing:C_state_order_coupling",
++        "missing:D_area_contact_temperature",
++        "missing:E_contact_consistency",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "000100",
++      "mutations": [
++        "missing:A_facility_normalization",
++        "missing:B_local_validation_schema",
++        "missing:D_area_contact_temperature",
++        "missing:E_contact_consistency",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "000101",
++      "mutations": [
++        "missing:B_local_validation_schema",
++        "missing:D_area_contact_temperature",
++        "missing:E_contact_consistency",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "000110",
++      "mutations": [
++        "missing:A_facility_normalization",
++        "missing:D_area_contact_temperature",
++        "missing:E_contact_consistency",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "000111",
++      "mutations": [
++        "missing:D_area_contact_temperature",
++        "missing:E_contact_consistency",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "001000",
++      "mutations": [
++        "missing:A_facility_normalization",
++        "missing:B_local_validation_schema",
++        "missing:C_state_order_coupling",
++        "missing:E_contact_consistency",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "001001",
++      "mutations": [
++        "missing:B_local_validation_schema",
++        "missing:C_state_order_coupling",
++        "missing:E_contact_consistency",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "001010",
++      "mutations": [
++        "missing:A_facility_normalization",
++        "missing:C_state_order_coupling",
++        "missing:E_contact_consistency",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "001011",
++      "mutations": [
++        "missing:C_state_order_coupling",
++        "missing:E_contact_consistency",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "001100",
++      "mutations": [
++        "missing:A_facility_normalization",
++        "missing:B_local_validation_schema",
++        "missing:E_contact_consistency",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "001101",
++      "mutations": [
++        "missing:B_local_validation_schema",
++        "missing:E_contact_consistency",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "001110",
++      "mutations": [
++        "missing:A_facility_normalization",
++        "missing:E_contact_consistency",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "001111",
++      "mutations": [
++        "missing:E_contact_consistency",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "010000",
++      "mutations": [
++        "missing:A_facility_normalization",
++        "missing:B_local_validation_schema",
++        "missing:C_state_order_coupling",
++        "missing:D_area_contact_temperature",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "010001",
++      "mutations": [
++        "missing:B_local_validation_schema",
++        "missing:C_state_order_coupling",
++        "missing:D_area_contact_temperature",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "010010",
++      "mutations": [
++        "missing:A_facility_normalization",
++        "missing:C_state_order_coupling",
++        "missing:D_area_contact_temperature",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "010011",
++      "mutations": [
++        "missing:C_state_order_coupling",
++        "missing:D_area_contact_temperature",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "010100",
++      "mutations": [
++        "missing:A_facility_normalization",
++        "missing:B_local_validation_schema",
++        "missing:D_area_contact_temperature",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "010101",
++      "mutations": [
++        "missing:B_local_validation_schema",
++        "missing:D_area_contact_temperature",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "010110",
++      "mutations": [
++        "missing:A_facility_normalization",
++        "missing:D_area_contact_temperature",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "010111",
++      "mutations": [
++        "missing:D_area_contact_temperature",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "011000",
++      "mutations": [
++        "missing:A_facility_normalization",
++        "missing:B_local_validation_schema",
++        "missing:C_state_order_coupling",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "011001",
++      "mutations": [
++        "missing:B_local_validation_schema",
++        "missing:C_state_order_coupling",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "011010",
++      "mutations": [
++        "missing:A_facility_normalization",
++        "missing:C_state_order_coupling",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "011011",
++      "mutations": [
++        "missing:C_state_order_coupling",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "011100",
++      "mutations": [
++        "missing:A_facility_normalization",
++        "missing:B_local_validation_schema",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "011101",
++      "mutations": [
++        "missing:B_local_validation_schema",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "011110",
++      "mutations": [
++        "missing:A_facility_normalization",
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "011111",
++      "mutations": [
++        "missing:F_radiation_boundary_coupling"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "100000",
++      "mutations": [
++        "missing:A_facility_normalization",
+         "missing:B_local_validation_schema",
+         "missing:C_state_order_coupling",
+         "missing:D_area_contact_temperature",
+@@ -22,7 +377,19 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "00010",
++      "mask": "100001",
++      "mutations": [
++        "missing:B_local_validation_schema",
++        "missing:C_state_order_coupling",
++        "missing:D_area_contact_temperature",
++        "missing:E_contact_consistency"
++      ],
++      "passes": false,
++      "reward": 0.0
++    },
++    {
++      "failure_excerpt": "verifier reward 0.0",
++      "mask": "100010",
+       "mutations": [
+         "missing:A_facility_normalization",
+         "missing:C_state_order_coupling",
+@@ -34,7 +401,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "00011",
++      "mask": "100011",
+       "mutations": [
+         "missing:C_state_order_coupling",
+         "missing:D_area_contact_temperature",
+@@ -45,7 +412,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "00100",
++      "mask": "100100",
+       "mutations": [
+         "missing:A_facility_normalization",
+         "missing:B_local_validation_schema",
+@@ -57,7 +424,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "00101",
++      "mask": "100101",
+       "mutations": [
+         "missing:B_local_validation_schema",
+         "missing:D_area_contact_temperature",
+@@ -68,7 +435,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "00110",
++      "mask": "100110",
+       "mutations": [
+         "missing:A_facility_normalization",
+         "missing:D_area_contact_temperature",
+@@ -79,7 +446,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "00111",
++      "mask": "100111",
+       "mutations": [
+         "missing:D_area_contact_temperature",
+         "missing:E_contact_consistency"
+@@ -89,7 +456,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "01000",
++      "mask": "101000",
+       "mutations": [
+         "missing:A_facility_normalization",
+         "missing:B_local_validation_schema",
+@@ -101,7 +468,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "01001",
++      "mask": "101001",
+       "mutations": [
+         "missing:B_local_validation_schema",
+         "missing:C_state_order_coupling",
+@@ -112,7 +479,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "01010",
++      "mask": "101010",
+       "mutations": [
+         "missing:A_facility_normalization",
+         "missing:C_state_order_coupling",
+@@ -123,7 +490,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "01011",
++      "mask": "101011",
+       "mutations": [
+         "missing:C_state_order_coupling",
+         "missing:E_contact_consistency"
+@@ -133,7 +500,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "01100",
++      "mask": "101100",
+       "mutations": [
+         "missing:A_facility_normalization",
+         "missing:B_local_validation_schema",
+@@ -144,7 +511,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "01101",
++      "mask": "101101",
+       "mutations": [
+         "missing:B_local_validation_schema",
+         "missing:E_contact_consistency"
+@@ -154,7 +521,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "01110",
++      "mask": "101110",
+       "mutations": [
+         "missing:A_facility_normalization",
+         "missing:E_contact_consistency"
+@@ -164,7 +531,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "01111",
++      "mask": "101111",
+       "mutations": [
+         "missing:E_contact_consistency"
+       ],
+@@ -173,7 +540,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "10000",
++      "mask": "110000",
+       "mutations": [
+         "missing:A_facility_normalization",
+         "missing:B_local_validation_schema",
+@@ -185,7 +552,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "10001",
++      "mask": "110001",
+       "mutations": [
+         "missing:B_local_validation_schema",
+         "missing:C_state_order_coupling",
+@@ -196,7 +563,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "10010",
++      "mask": "110010",
+       "mutations": [
+         "missing:A_facility_normalization",
+         "missing:C_state_order_coupling",
+@@ -207,7 +574,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "10011",
++      "mask": "110011",
+       "mutations": [
+         "missing:C_state_order_coupling",
+         "missing:D_area_contact_temperature"
+@@ -217,7 +584,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "10100",
++      "mask": "110100",
+       "mutations": [
+         "missing:A_facility_normalization",
+         "missing:B_local_validation_schema",
+@@ -228,7 +595,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "10101",
++      "mask": "110101",
+       "mutations": [
+         "missing:B_local_validation_schema",
+         "missing:D_area_contact_temperature"
+@@ -238,7 +605,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "10110",
++      "mask": "110110",
+       "mutations": [
+         "missing:A_facility_normalization",
+         "missing:D_area_contact_temperature"
+@@ -248,7 +615,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "10111",
++      "mask": "110111",
+       "mutations": [
+         "missing:D_area_contact_temperature"
+       ],
+@@ -257,7 +624,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "11000",
++      "mask": "111000",
+       "mutations": [
+         "missing:A_facility_normalization",
+         "missing:B_local_validation_schema",
+@@ -268,7 +635,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "11001",
++      "mask": "111001",
+       "mutations": [
+         "missing:B_local_validation_schema",
+         "missing:C_state_order_coupling"
+@@ -278,7 +645,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "11010",
++      "mask": "111010",
+       "mutations": [
+         "missing:A_facility_normalization",
+         "missing:C_state_order_coupling"
+@@ -288,7 +655,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "11011",
++      "mask": "111011",
+       "mutations": [
+         "missing:C_state_order_coupling"
+       ],
+@@ -297,7 +664,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "11100",
++      "mask": "111100",
+       "mutations": [
+         "missing:A_facility_normalization",
+         "missing:B_local_validation_schema"
+@@ -307,7 +674,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "11101",
++      "mask": "111101",
+       "mutations": [
+         "missing:B_local_validation_schema"
+       ],
+@@ -316,7 +683,7 @@
+     },
+     {
+       "failure_excerpt": "verifier reward 0.0",
+-      "mask": "11110",
++      "mask": "111110",
+       "mutations": [
+         "missing:A_facility_normalization"
+       ],
+@@ -325,7 +692,7 @@
+     },
+     {
+       "failure_excerpt": "",
+-      "mask": "11111",
++      "mask": "111111",
+       "mutations": [],
+       "passes": true,
+       "reward": 1.0
+@@ -336,15 +703,16 @@
+     "B_local_validation_schema",
+     "C_state_order_coupling",
+     "D_area_contact_temperature",
+-    "E_contact_consistency"
++    "E_contact_consistency",
++    "F_radiation_boundary_coupling"
+   ],
+   "mode": "cluster-audit",
+   "nop_reward": 0.0,
+   "passed": true,
+   "passing_masks": [
+-    "11111"
++    "111111"
+   ],
+-  "states_evaluated": 32,
++  "states_evaluated": 64,
+   "task": "thermal-stack-calibration",
+   "wrong_fix_probe_rewards": {
+     "all_T_to_K": 0.0,
+@@ -355,6 +723,11 @@
+     "global_comma": 0.0,
+     "harmonic_only": 0.0,
+     "loose_convergence": 0.0,
++    "radiation_celsius": 0.0,
++    "radiation_constant_ambient": 0.0,
++    "radiation_ignored": 0.0,
++    "radiation_replaces_convection": 0.0,
++    "radiation_wrong_surround": 0.0,
+     "temp_coeff_uses_celsius": 0.0,
+     "two_pass_only": 0.0
+   },
+@@ -407,6 +780,36 @@
+       "probe": "loose_convergence",
+       "reward": 0.0
+     },
++    "radiation_celsius": {
++      "failure_excerpt": "verifier reward 0.0",
++      "passes": false,
++      "probe": "radiation_celsius",
++      "reward": 0.0
++    },
++    "radiation_constant_ambient": {
++      "failure_excerpt": "verifier reward 0.0",
++      "passes": false,
++      "probe": "radiation_constant_ambient",
++      "reward": 0.0
++    },
++    "radiation_ignored": {
++      "failure_excerpt": "verifier reward 0.0",
++      "passes": false,
++      "probe": "radiation_ignored",
++      "reward": 0.0
++    },
++    "radiation_replaces_convection": {
++      "failure_excerpt": "verifier reward 0.0",
++      "passes": false,
++      "probe": "radiation_replaces_convection",
++      "reward": 0.0
++    },
++    "radiation_wrong_surround": {
++      "failure_excerpt": "verifier reward 0.0",
++      "passes": false,
++      "probe": "radiation_wrong_surround",
++      "reward": 0.0
++    },
+     "temp_coeff_uses_celsius": {
+       "failure_excerpt": "verifier reward 0.0",
+       "passes": false,
+diff --git a/tasks/thermal-stack-calibration/tests/fixtures/hidden_cases.json b/tasks/thermal-stack-calibration/tests/fixtures/hidden_cases.json
+index 0613a5a..3b46ecd 100644
+--- a/tasks/thermal-stack-calibration/tests/fixtures/hidden_cases.json
++++ b/tasks/thermal-stack-calibration/tests/fixtures/hidden_cases.json
+@@ -570,6 +570,141 @@
+           "contact_t_ref_c": 0.0
+         }
+       ]
++    },
++    {
++      "case_id": "h016_radiative_boundary_single_layer",
++      "length_m": 0.08,
++      "num_cells": 16,
++      "area_m2": 0.32,
++      "t_left_c": 95.0,
++      "t_inf_c": 20.0,
++      "h_w_m2_k": 16.0,
++      "facility": {
++        "city": "Austin",
++        "region": "TX",
++        "country": "US",
++        "installed_on": "01/05/2026",
++        "measured_on": "05/05/2026"
++      },
++      "right_radiation": {
++        "emissivity": 0.82,
++        "view_factor": 0.75,
++        "t_surround_c": 15.0
++      },
++      "layers": [
++        {
++          "name": "radiating_plate",
++          "x_start_m": 0.0,
++          "x_end_m": 0.08,
++          "material_id": "weak_plate",
++          "q_w_m3": 0.0
++        }
++      ]
++    },
++    {
++      "case_id": "h017_radiation_contact_generation",
++      "length_m": 0.12,
++      "num_cells": 24,
++      "area_m2": 0.27,
++      "t_left_c": 115.0,
++      "t_inf_c": 25.0,
++      "h_w_m2_k": 22.0,
++      "facility": {
++        "city": "Austin",
++        "region": "TX",
++        "country": "US",
++        "installed_on": "01/05/2026",
++        "measured_on": "06/20/2026"
++      },
++      "right_radiation": {
++        "emissivity": 0.78,
++        "view_factor": 0.85,
++        "t_surround_c": 18.0
++      },
++      "layers": [
++        {
++          "name": "radiant_a",
++          "x_start_m": 0.0,
++          "x_end_m": 0.04,
++          "material_id": "temp_contact_left",
++          "q_w_m3": 6500.0
++        },
++        {
++          "name": "radiant_b",
++          "x_start_m": 0.04,
++          "x_end_m": 0.08,
++          "material_id": "temp_contact_right",
++          "q_w_m3": 1200.0
++        },
++        {
++          "name": "radiant_c",
++          "x_start_m": 0.08,
++          "x_end_m": 0.12,
++          "material_id": "cache_hot_right",
++          "q_w_m3": 0.0
++        }
++      ],
++      "contacts": [
++        {
++          "x_m": 0.04,
++          "r_contact_m2_k_w": 0.007,
++          "contact_temp_coeff_per_k": 0.004,
++          "contact_t_ref_c": 25.0
++        },
++        {
++          "x_m": 0.08,
++          "r_contact_m2_k_w": 0.005,
++          "contact_temp_coeff_per_k": 0.006,
++          "contact_t_ref_c": 30.0
++        }
++      ]
++    },
++    {
++      "case_id": "h018_radiation_kelvin_mm_contact",
++      "length_m": "90",
++      "length_unit": "mm",
++      "num_cells": 18,
++      "area_m2": "0,26",
++      "temperature_unit": "K",
++      "t_left_c": "378,15",
++      "t_inf_c": "293,15",
++      "h_w_m2_k": "18,0",
++      "facility": {
++        "city": "Milan",
++        "region": "MI",
++        "country": "IT",
++        "installed_on": "11/02/2026",
++        "measured_on": "20/04/2026"
++      },
++      "right_radiation": {
++        "emissivity": "0,65",
++        "view_factor": "0,90",
++        "t_surround_c": "288,15"
++      },
++      "layers": [
++        {
++          "name": "radiant_metric_left",
++          "x_start_m": "0",
++          "x_end_m": "45",
++          "material_id": "copper_hot",
++          "q_w_m3": "0,0"
++        },
++        {
++          "name": "radiant_metric_right",
++          "x_start_m": "45",
++          "x_end_m": "90",
++          "material_id": "temp_contact_left",
++          "q_w_m3": "2200,0"
++        }
++      ],
++      "contacts": [
++        {
++          "x_m": "45",
++          "r_contact_m2_k_w": "0,009",
++          "contact_temp_coeff_per_k": "-0,0025",
++          "contact_t_ref_c": "25,0"
++        }
++      ]
+     }
+   ]
+ }
+diff --git a/tasks/thermal-stack-calibration/tests/fixtures/reference_solver.py b/tasks/thermal-stack-calibration/tests/fixtures/reference_solver.py
+index 6708922..07c5b2e 100644
+--- a/tasks/thermal-stack-calibration/tests/fixtures/reference_solver.py
++++ b/tasks/thermal-stack-calibration/tests/fixtures/reference_solver.py
+@@ -15,6 +15,7 @@ import numpy as np
+ 
+ KELVIN_OFFSET = 273.15
+ AGE_CONTACT_RATE = 2.0e-5
++STEFAN_BOLTZMANN = 5.670374419e-8
+ TASK_DIR = Path(__file__).resolve().parents[2]
+ APP_DATA = Path(os.environ["APP_DIR"]) / "data" if "APP_DIR" in os.environ else TASK_DIR / "environment" / "app" / "data"
+ 
+@@ -129,6 +130,15 @@ def normalize_case(raw_case: dict[str, Any], materials: dict[str, dict[str, Any]
+                 "contact_t_ref_c": parse_scalar(contact.get("contact_t_ref_c", 25.0)),
+             }
+         )
++    radiation_raw = raw.get("right_radiation") or {}
++    radiation = {
++        "emissivity": parse_scalar(radiation_raw.get("emissivity", 0.0)),
++        "view_factor": parse_scalar(radiation_raw.get("view_factor", 1.0)),
++        "t_surround_c": normalize_temperature_to_c(
++            radiation_raw.get("t_surround_c", raw["t_inf_c"]),
++            temp_unit,
++        ),
++    }
+     return {
+         "case_id": str(raw["case_id"]),
+         "length_m": parse_scalar(raw["length_m"]) * unit_scale,
+@@ -142,6 +152,7 @@ def normalize_case(raw_case: dict[str, Any], materials: dict[str, dict[str, Any]
+         "service_age_days": max(0, (measured - installed).days),
+         "layers": layers,
+         "contacts": contacts,
++        "right_radiation": radiation,
+     }
+ 
+ 
+@@ -197,6 +208,16 @@ def _validate(case: dict[str, Any]) -> None:
+             raise ValueError("unaligned contact")
+         if _face_index(contact["x_m"], dx) not in internal_faces:
+             raise ValueError("contact location")
++    radiation = case.get("right_radiation", {})
++    emissivity = radiation.get("emissivity", 0.0)
++    view_factor = radiation.get("view_factor", 1.0)
++    t_surround_c = radiation.get("t_surround_c", case["t_inf_c"])
++    if not (0.0 <= emissivity <= 1.0):
++        raise ValueError("bad radiation emissivity")
++    if not (0.0 <= view_factor <= 1.0):
++        raise ValueError("bad radiation view factor")
++    if t_surround_c <= -KELVIN_OFFSET:
++        raise ValueError("bad radiation surround temperature")
+ 
+ 
+ def _layer_at_center(layers: list[dict[str, Any]], x_m: float) -> dict[str, Any]:
+@@ -234,9 +255,39 @@ def _right_g(k_right: float, h: float, dx_m: float, area_m2: float) -> float:
+     return area_m2 / (dx_m / (2.0 * k_right) + 1.0 / h)
+ 
+ 
++def _radiation_active(case: dict[str, Any]) -> bool:
++    radiation = case.get("right_radiation", {})
++    return radiation.get("emissivity", 0.0) > 0.0 and radiation.get("view_factor", 1.0) > 0.0
++
++
++def _radiation_h(case: dict[str, Any], surface_temp_c: float | None) -> float:
++    if not _radiation_active(case):
++        return 0.0
++    radiation = case["right_radiation"]
++    t_surface_k = KELVIN_OFFSET + (case["t_inf_c"] if surface_temp_c is None else surface_temp_c)
++    t_surround_k = KELVIN_OFFSET + radiation["t_surround_c"]
++    return (
++        radiation["emissivity"]
++        * radiation["view_factor"]
++        * STEFAN_BOLTZMANN
++        * (t_surface_k + t_surround_k)
++        * (t_surface_k * t_surface_k + t_surround_k * t_surround_k)
++    )
++
++
++def _right_boundary_state(case: dict[str, Any], h_rad: float) -> tuple[float, float]:
++    h_conv = case["h_w_m2_k"]
++    if h_rad <= 0.0:
++        return h_conv, case["t_inf_c"]
++    h_total = h_conv + h_rad
++    t_effective = (h_conv * case["t_inf_c"] + h_rad * case["right_radiation"]["t_surround_c"]) / h_total
++    return h_total, t_effective
++
++
+ def _solve_core(
+     case: dict[str, Any],
+     contact_resistances: dict[int, float] | None = None,
++    right_surface_temp_c: float | None = None,
+ ) -> dict[str, Any]:
+     """Solve once using the given contact resistances (or defaults from aged contacts)."""
+     length = case["length_m"]
+@@ -269,8 +320,8 @@ def _solve_core(
+     matrix = np.zeros((n, n), dtype=float)
+     rhs = np.zeros(n, dtype=float)
+     t_left = case["t_left_c"]
+-    t_inf = case["t_inf_c"]
+-    h = case["h_w_m2_k"]
++    h_rad = _radiation_h(case, right_surface_temp_c)
++    h_right, t_right_reference = _right_boundary_state(case, h_rad)
+     for i in range(n):
+         if i == 0:
+             g_left = _left_g(k_values[i], dx, area)
+@@ -281,9 +332,9 @@ def _solve_core(
+             matrix[i, i] += g_west
+             matrix[i, i - 1] -= g_west
+         if i == n - 1:
+-            g_right = _right_g(k_values[i], h, dx, area)
++            g_right = _right_g(k_values[i], h_right, dx, area)
+             matrix[i, i] += g_right
+-            rhs[i] += g_right * t_inf
++            rhs[i] += g_right * t_right_reference
+         else:
+             g_east = _internal_g(k_values[i], k_values[i + 1], face_contact[i], dx, area)
+             matrix[i, i] += g_east
+@@ -312,7 +363,8 @@ def _solve_core(
+             }
+         )
+     left_flow = _left_g(k_values[0], dx, area) * (t_left - float(temperatures[0]))
+-    right_flow = _right_g(k_values[-1], h, dx, area) * (float(temperatures[-1]) - t_inf)
++    right_flow = _right_g(k_values[-1], h_right, dx, area) * (float(temperatures[-1]) - t_right_reference)
++    right_surface_c = float(temperatures[-1]) - right_flow * dx / (2.0 * k_values[-1] * area)
+     source_total = sum(q * dx * area for q in q_values)
+     energy_residual = right_flow - left_flow - source_total
+     return {
+@@ -329,6 +381,8 @@ def _solve_core(
+         "_energy_residual_w": float(energy_residual),
+         "_dx": dx,
+         "_k_values": k_values,
++        "_right_surface_c": float(right_surface_c),
++        "_right_h_rad_w_m2_k": float(h_rad),
+     }
+ 
+ 
+@@ -339,7 +393,8 @@ def solve_case(raw_case: dict[str, Any]) -> dict[str, Any]:
+     # Fixed-point iteration for temperature-dependent contact resistance
+     cs = case.get("contacts", [])
+     has_temp_dependent = any(c.get("contact_temp_coeff_per_k", 0.0) != 0.0 for c in cs)
+-    if not has_temp_dependent:
++    has_radiation = _radiation_active(case)
++    if not has_temp_dependent and not has_radiation:
+         result = _solve_core(case)
+         return {k: v for k, v in result.items() if not k.startswith("_")}
+ 
+@@ -348,9 +403,10 @@ def solve_case(raw_case: dict[str, Any]) -> dict[str, Any]:
+     for c in cs:
+         f = _face_index(c["x_m"], dx)
+         reff[f] = _aged_contact(c["r_contact_m2_k_w"], case["service_age_days"])
++    right_surface_c: float | None = None
+ 
+-    for _ in range(50):
+-        result = _solve_core(case, contact_resistances=reff)
++    for _ in range(80):
++        result = _solve_core(case, contact_resistances=reff, right_surface_temp_c=right_surface_c)
+         diag_by_face = {_face_index(d["x_m"], dx): d for d in result["interface_diagnostics"]}
+         new_reff = dict(reff)
+         max_rel = 0.0
+@@ -369,11 +425,20 @@ def solve_case(raw_case: dict[str, Any]) -> dict[str, Any]:
+             )
+             max_rel = max(max_rel, abs(rn - reff[f]) / max(abs(reff[f]), 1e-12))
+             new_reff[f] = rn
++        previous_surface = case["t_inf_c"] if right_surface_c is None else right_surface_c
++        new_surface = result["_right_surface_c"] if has_radiation else right_surface_c
++        if has_radiation:
++            max_rel = max(
++                max_rel,
++                abs(new_surface - previous_surface)
++                / max(abs(new_surface), 1.0),
++            )
+         reff = new_reff
++        right_surface_c = new_surface
+         if max_rel < 1e-6:
+             break
+ 
+-    result = _solve_core(case, contact_resistances=reff)
++    result = _solve_core(case, contact_resistances=reff, right_surface_temp_c=right_surface_c)
+     return {k: v for k, v in result.items() if not k.startswith("_")}
+ 
+ 
+@@ -420,7 +485,7 @@ def check_physical_invariants(raw_case: dict[str, Any], result: dict[str, Any])
+             if a + 1e-9 < b:
+                 failures.append("no-source temperature profile is not monotone")
+                 break
+-    if len(normalized["layers"]) == 1 and source_total == 0.0:
++    if len(normalized["layers"]) == 1 and source_total == 0.0 and not _radiation_active(normalized):
+         expected_temps = analytic_constant_k_no_source(raw_case, result["x_m"])
+         for actual, expected in zip(temps, expected_temps):
+             if not math.isclose(actual, expected, rel_tol=0.0, abs_tol=5e-4):
+diff --git a/tasks/thermal-stack-calibration/tests/test_anticheat.py b/tasks/thermal-stack-calibration/tests/test_anticheat.py
+index 98e19ba..fb74f83 100644
+--- a/tasks/thermal-stack-calibration/tests/test_anticheat.py
++++ b/tasks/thermal-stack-calibration/tests/test_anticheat.py
+@@ -3,7 +3,7 @@ import os, re, unittest
+ from pathlib import Path
+ APP_DIR = Path(os.environ.get("APP_DIR", "/app"))
+ SOURCE_FILES = sorted(list((APP_DIR / "thermal_stack").rglob("*.py")) + list((APP_DIR / "scripts").rglob("*.py")))
+-FORBIDDEN = [("hidden/verifier path", r"/tests\b|tests/fixtures|hidden_cases|reference_solver|/solution\b|/logs\b"), ("reward or verifier environment", r"reward\.txt|LOG_DIR|REWARD_FILE|RESULTS_PATH|HIDDEN_CASES_PATH"), ("encoded answer table", r"\b(?:base64|b64decode|urlsafe_b64decode|b85decode|a85decode|fromhex)\b"), ("network access", r"\b(?:socket|urllib|urllib3|requests|httpx|aiohttp|http\.client|ftplib)\b"), ("repository history access", r"\.git\b"), ("hardcoded hidden case id", r"\bh0(?:0[1-9]|1[0-2])_[a-z0-9_]+\b")]
++FORBIDDEN = [("hidden/verifier path", r"/tests\b|tests/fixtures|hidden_cases|reference_solver|/solution\b|/logs\b"), ("reward or verifier environment", r"reward\.txt|LOG_DIR|REWARD_FILE|RESULTS_PATH|HIDDEN_CASES_PATH"), ("encoded answer table", r"\b(?:base64|b64decode|urlsafe_b64decode|b85decode|a85decode|fromhex)\b"), ("network access", r"\b(?:socket|urllib|urllib3|requests|httpx|aiohttp|http\.client|ftplib)\b"), ("repository history access", r"\.git\b"), ("hardcoded hidden case id", r"\bh0(?:0[1-9]|1[0-8])_[a-z0-9_]+\b")]
+ def _all_source() -> str:
+     return "\n".join(f"# >>> {p}\n{p.read_text(encoding='utf-8')}" for p in SOURCE_FILES)
+ class AntiCheatTests(unittest.TestCase):
+diff --git a/tools/partial_fix_audit.py b/tools/partial_fix_audit.py
+index cf5b428..775b4c9 100755
+--- a/tools/partial_fix_audit.py
++++ b/tools/partial_fix_audit.py
+@@ -28,6 +28,7 @@ CLUSTERS = [
+     "C_state_order_coupling",
+     "D_area_contact_temperature",
+     "E_contact_consistency",
++    "F_radiation_boundary_coupling",
+ ]
+ ALL_MASK = (1 << len(CLUSTERS)) - 1
+ 
+@@ -166,8 +167,12 @@ def mutate_two_pass_only(app_dir: Path) -> None:
+     """Replace fixed-point contact convergence with a single two-pass correction."""
+     _replace(
+         app_dir / "thermal_stack" / "solver.py",
+-        '''        for _ in range(50):
+-            mesh, temperatures = _solve_core(case, override_contacts=reff)
++        '''        for _ in range(80):
++            mesh, temperatures, solved_surface_c, h_rad = _solve_core(
++                case,
++                override_contacts=reff,
++                right_surface_temp_c=right_surface_c,
++            )
+             diagnostics = _interface_diagnostics(case, mesh, temperatures)
+             diag_by_face = {_face_index(d["x_m"], dx): d for d in diagnostics}
+             new_reff = dict(reff)
+@@ -187,10 +192,17 @@ def mutate_two_pass_only(app_dir: Path) -> None:
+                 )
+                 max_rel = max(max_rel, abs(rn - reff.get(f, 0.0)) / max(abs(reff.get(f, 0.0)), 1e-12))
+                 new_reff[f] = rn
++            previous_surface = case.t_inf_c if right_surface_c is None else right_surface_c
++            if has_radiation:
++                max_rel = max(
++                    max_rel,
++                    abs(solved_surface_c - previous_surface) / max(abs(solved_surface_c), 1.0),
++                )
+             reff = new_reff
++            right_surface_c = solved_surface_c
+             if max_rel < 1e-6:
+                 break''',
+-        '''        mesh, temperatures = _solve_core(case, override_contacts=reff)
++        '''        mesh, temperatures, right_surface_c, h_rad = _solve_core(case, override_contacts=reff)
+         diagnostics = _interface_diagnostics(case, mesh, temperatures)
+         diag_by_face = {_face_index(d["x_m"], dx): d for d in diagnostics}
+         for c in case.contacts:
+@@ -210,6 +222,65 @@ def mutate_two_pass_only(app_dir: Path) -> None:
+     )
+ 
+ 
++def mutate_ignore_radiation(app_dir: Path) -> None:
++    _replace(
++        app_dir / "thermal_stack" / "solver.py",
++        '''def _radiation_active(case: Case) -> bool:
++    return case.right_radiation.emissivity > 0.0 and case.right_radiation.view_factor > 0.0
++''',
++        '''def _radiation_active(case: Case) -> bool:
++    return False
++''',
++    )
++
++
++def mutate_constant_ambient_radiation(app_dir: Path) -> None:
++    _replace(
++        app_dir / "thermal_stack" / "solver.py",
++        "    t_surface_k = KELVIN_OFFSET + (case.t_inf_c if surface_temp_c is None else surface_temp_c)\n",
++        "    t_surface_k = KELVIN_OFFSET + case.t_inf_c\n",
++    )
++
++
++def mutate_celsius_radiation(app_dir: Path) -> None:
++    _replace(
++        app_dir / "thermal_stack" / "solver.py",
++        '''    t_surface_k = KELVIN_OFFSET + (case.t_inf_c if surface_temp_c is None else surface_temp_c)
++    t_surround_k = KELVIN_OFFSET + case.right_radiation.t_surround_c
++''',
++        '''    t_surface_k = case.t_inf_c if surface_temp_c is None else surface_temp_c
++    t_surround_k = case.right_radiation.t_surround_c
++''',
++    )
++
++
++def mutate_radiation_replaces_convection(app_dir: Path) -> None:
++    _replace(
++        app_dir / "thermal_stack" / "solver.py",
++        '''    h_total = case.h_w_m2_k + h_rad
++    t_effective = (
++        case.h_w_m2_k * case.t_inf_c + h_rad * case.right_radiation.t_surround_c
++    ) / h_total
++''',
++        '''    h_total = h_rad
++    t_effective = case.right_radiation.t_surround_c
++''',
++    )
++
++
++def mutate_wrong_surround_temp(app_dir: Path) -> None:
++    _replace(
++        app_dir / "thermal_stack" / "solver.py",
++        "    t_surround_k = KELVIN_OFFSET + case.right_radiation.t_surround_c\n",
++        "    t_surround_k = KELVIN_OFFSET + case.t_inf_c\n",
++    )
++    _replace(
++        app_dir / "thermal_stack" / "solver.py",
++        "        case.h_w_m2_k * case.t_inf_c + h_rad * case.right_radiation.t_surround_c\n",
++        "        case.h_w_m2_k * case.t_inf_c + h_rad * case.t_inf_c\n",
++    )
++
++
+ WRONG_FIX_PROBES: dict[str, Callable[[Path], None]] = {
+     "all_T_to_K": mutate_all_t_to_k,
+     "dates_US": mutate_dates_us,
+@@ -221,6 +292,11 @@ WRONG_FIX_PROBES: dict[str, Callable[[Path], None]] = {
+     "loose_convergence": mutate_loose_convergence,
+     "temp_coeff_uses_celsius": mutate_temp_coeff_uses_celsius,
+     "two_pass_only": mutate_two_pass_only,
++    "radiation_ignored": mutate_ignore_radiation,
++    "radiation_constant_ambient": mutate_constant_ambient_radiation,
++    "radiation_celsius": mutate_celsius_radiation,
++    "radiation_replaces_convection": mutate_radiation_replaces_convection,
++    "radiation_wrong_surround": mutate_wrong_surround_temp,
+ }
+ 
+ CLUSTER_MISSING_MUTATIONS: dict[str, Callable[[Path], None]] = {
+@@ -229,6 +305,7 @@ CLUSTER_MISSING_MUTATIONS: dict[str, Callable[[Path], None]] = {
+     "C_state_order_coupling": mutate_cache_unchanged,
+     "D_area_contact_temperature": mutate_harmonic_only,
+     "E_contact_consistency": mutate_two_pass_only,
++    "F_radiation_boundary_coupling": mutate_ignore_radiation,
+ }
+ 
+ 

@@ -53,6 +53,7 @@ Each case has:
 - optional `temperature_unit`, defaulting to `"C"` (use `"C"` for Celsius, `"K"` for Kelvin)
 - optional `length_unit`, defaulting to `"m"` (use `"m"` for metres, `"mm"` for millimetres)
 - optional `contacts`
+- optional `right_radiation`
 
 Numeric fields may arrive as strings using facility-local formatting (e.g.,
 decimal commas may represent decimal points). Unit normalization and number
@@ -74,6 +75,16 @@ Each contact has:
 
 A missing contact at an internal layer boundary means ordinary material
 continuity with zero added contact resistance.
+
+`right_radiation`, when present, describes radiative exchange at the right
+surface in parallel with the convective film:
+
+- `emissivity`, defaulting to `0.0`
+- `view_factor`, defaulting to `1.0`
+- `t_surround_c`, defaulting to `t_inf_c`
+
+Temperature normalization applies to `t_surround_c` the same way it applies to
+the other case temperature fields.
 
 ## Normalization Contract
 
@@ -108,6 +119,20 @@ contacts and is intended to reveal the required treatment; a careful audit
 of consistency diagnostics on the calibration outputs will show the nature
 of the contact-temperature interaction.
 
+## Right-Side Radiative Exchange
+
+Some qualification cases include radiation from the right surface to nearby
+surroundings. Treat that radiative exchange as a nonlinear surface loss in
+parallel with convection, and make the right-surface temperature, radiative
+film coefficient, boundary heat flux, contact corrections, and energy balance
+mutually consistent in the final reported solution.
+
+For a linearized solve, the equivalent radiative coefficient is based on the
+current right-surface temperature estimate and the surrounding temperature.
+The radiative and convective films share the same right surface but may reject
+heat to different reference temperatures. Cases with zero emissivity reduce to
+the ordinary convection-only boundary.
+
 ## Geometry And Validation
 
 The stack spans `x` in `[0, L]` and is represented by `N` uniform
@@ -130,6 +155,8 @@ Reject invalid cases:
 - gaps exist between layers
 - internal layer/contact boundaries are not aligned to cell faces
 - contact resistance is negative
+- radiation emissivity is outside `[0, 1]`
+- radiation view factor is outside `[0, 1]`
 - contact interface is not located on an internal layer boundary and cell face
 
 ## Qualification Behavior
@@ -147,6 +174,7 @@ behaviors:
 - high-contrast material interface behavior
 - fixed-temperature behavior at the left boundary
 - convective, not fixed-temperature, behavior at the right boundary
+- optional radiative right-boundary losses coupled to the right-surface temperature
 - consistent boundary fluxes, interface diagnostics, and energy balance
 
 Physical invariants that should hold for valid outputs:
@@ -157,6 +185,7 @@ Physical invariants that should hold for valid outputs:
 - nonzero contact resistance may create a temperature drop at the interface
 - heat flux through an internal interface is single-valued
 - right boundary behavior changes with `h_w_m2_k`
+- right radiation changes the boundary heat flux when emissivity is nonzero
 - volumetric generation changes both the temperature field and the global
   energy balance
 - the reported energy residual should be close to zero for the approved model

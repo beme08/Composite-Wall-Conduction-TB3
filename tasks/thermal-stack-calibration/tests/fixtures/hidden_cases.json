@@ -570,6 +570,141 @@
           "contact_t_ref_c": 0.0
         }
       ]
+    },
+    {
+      "case_id": "h016_radiative_boundary_single_layer",
+      "length_m": 0.08,
+      "num_cells": 16,
+      "area_m2": 0.32,
+      "t_left_c": 95.0,
+      "t_inf_c": 20.0,
+      "h_w_m2_k": 16.0,
+      "facility": {
+        "city": "Austin",
+        "region": "TX",
+        "country": "US",
+        "installed_on": "01/05/2026",
+        "measured_on": "05/05/2026"
+      },
+      "right_radiation": {
+        "emissivity": 0.82,
+        "view_factor": 0.75,
+        "t_surround_c": 15.0
+      },
+      "layers": [
+        {
+          "name": "radiating_plate",
+          "x_start_m": 0.0,
+          "x_end_m": 0.08,
+          "material_id": "weak_plate",
+          "q_w_m3": 0.0
+        }
+      ]
+    },
+    {
+      "case_id": "h017_radiation_contact_generation",
+      "length_m": 0.12,
+      "num_cells": 24,
+      "area_m2": 0.27,
+      "t_left_c": 115.0,
+      "t_inf_c": 25.0,
+      "h_w_m2_k": 22.0,
+      "facility": {
+        "city": "Austin",
+        "region": "TX",
+        "country": "US",
+        "installed_on": "01/05/2026",
+        "measured_on": "06/20/2026"
+      },
+      "right_radiation": {
+        "emissivity": 0.78,
+        "view_factor": 0.85,
+        "t_surround_c": 18.0
+      },
+      "layers": [
+        {
+          "name": "radiant_a",
+          "x_start_m": 0.0,
+          "x_end_m": 0.04,
+          "material_id": "temp_contact_left",
+          "q_w_m3": 6500.0
+        },
+        {
+          "name": "radiant_b",
+          "x_start_m": 0.04,
+          "x_end_m": 0.08,
+          "material_id": "temp_contact_right",
+          "q_w_m3": 1200.0
+        },
+        {
+          "name": "radiant_c",
+          "x_start_m": 0.08,
+          "x_end_m": 0.12,
+          "material_id": "cache_hot_right",
+          "q_w_m3": 0.0
+        }
+      ],
+      "contacts": [
+        {
+          "x_m": 0.04,
+          "r_contact_m2_k_w": 0.007,
+          "contact_temp_coeff_per_k": 0.004,
+          "contact_t_ref_c": 25.0
+        },
+        {
+          "x_m": 0.08,
+          "r_contact_m2_k_w": 0.005,
+          "contact_temp_coeff_per_k": 0.006,
+          "contact_t_ref_c": 30.0
+        }
+      ]
+    },
+    {
+      "case_id": "h018_radiation_kelvin_mm_contact",
+      "length_m": "90",
+      "length_unit": "mm",
+      "num_cells": 18,
+      "area_m2": "0,26",
+      "temperature_unit": "K",
+      "t_left_c": "378,15",
+      "t_inf_c": "293,15",
+      "h_w_m2_k": "18,0",
+      "facility": {
+        "city": "Milan",
+        "region": "MI",
+        "country": "IT",
+        "installed_on": "11/02/2026",
+        "measured_on": "20/04/2026"
+      },
+      "right_radiation": {
+        "emissivity": "0,65",
+        "view_factor": "0,90",
+        "t_surround_c": "288,15"
+      },
+      "layers": [
+        {
+          "name": "radiant_metric_left",
+          "x_start_m": "0",
+          "x_end_m": "45",
+          "material_id": "copper_hot",
+          "q_w_m3": "0,0"
+        },
+        {
+          "name": "radiant_metric_right",
+          "x_start_m": "45",
+          "x_end_m": "90",
+          "material_id": "temp_contact_left",
+          "q_w_m3": "2200,0"
+        }
+      ],
+      "contacts": [
+        {
+          "x_m": "45",
+          "r_contact_m2_k_w": "0,009",
+          "contact_temp_coeff_per_k": "-0,0025",
+          "contact_t_ref_c": "25,0"
+        }
+      ]
     }
   ]
 }

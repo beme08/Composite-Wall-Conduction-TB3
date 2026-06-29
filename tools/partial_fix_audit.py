@@ -28,6 +28,7 @@ CLUSTERS = [
     "C_state_order_coupling",
     "D_area_contact_temperature",
     "E_contact_consistency",
+    "F_radiation_boundary_coupling",
 ]
 ALL_MASK = (1 << len(CLUSTERS)) - 1
 
@@ -166,8 +167,12 @@ def mutate_two_pass_only(app_dir: Path) -> None:
     """Replace fixed-point contact convergence with a single two-pass correction."""
     _replace(
         app_dir / "thermal_stack" / "solver.py",
-        '''        for _ in range(50):
-            mesh, temperatures = _solve_core(case, override_contacts=reff)
+        '''        for _ in range(80):
+            mesh, temperatures, solved_surface_c, h_rad = _solve_core(
+                case,
+                override_contacts=reff,
+                right_surface_temp_c=right_surface_c,
+            )
             diagnostics = _interface_diagnostics(case, mesh, temperatures)
             diag_by_face = {_face_index(d["x_m"], dx): d for d in diagnostics}
             new_reff = dict(reff)
@@ -187,10 +192,17 @@ def mutate_two_pass_only(app_dir: Path) -> None:
                 )
                 max_rel = max(max_rel, abs(rn - reff.get(f, 0.0)) / max(abs(reff.get(f, 0.0)), 1e-12))
                 new_reff[f] = rn
+            previous_surface = case.t_inf_c if right_surface_c is None else right_surface_c
+            if has_radiation:
+                max_rel = max(
+                    max_rel,
+                    abs(solved_surface_c - previous_surface) / max(abs(solved_surface_c), 1.0),
+                )
             reff = new_reff
+            right_surface_c = solved_surface_c
             if max_rel < 1e-6:
                 break''',
-        '''        mesh, temperatures = _solve_core(case, override_contacts=reff)
+        '''        mesh, temperatures, right_surface_c, h_rad = _solve_core(case, override_contacts=reff)
         diagnostics = _interface_diagnostics(case, mesh, temperatures)
         diag_by_face = {_face_index(d["x_m"], dx): d for d in diagnostics}
         for c in case.contacts:
@@ -210,6 +222,65 @@ def mutate_two_pass_only(app_dir: Path) -> None:
     )
 
 
+def mutate_ignore_radiation(app_dir: Path) -> None:
+    _replace(
+        app_dir / "thermal_stack" / "solver.py",
+        '''def _radiation_active(case: Case) -> bool:
+    return case.right_radiation.emissivity > 0.0 and case.right_radiation.view_factor > 0.0
+''',
+        '''def _radiation_active(case: Case) -> bool:
+    return False
+''',
+    )
+
+
+def mutate_constant_ambient_radiation(app_dir: Path) -> None:
+    _replace(
+        app_dir / "thermal_stack" / "solver.py",
+        "    t_surface_k = KELVIN_OFFSET + (case.t_inf_c if surface_temp_c is None else surface_temp_c)\n",
+        "    t_surface_k = KELVIN_OFFSET + case.t_inf_c\n",
+    )
+
+
+def mutate_celsius_radiation(app_dir: Path) -> None:
+    _replace(
+        app_dir / "thermal_stack" / "solver.py",
+        '''    t_surface_k = KELVIN_OFFSET + (case.t_inf_c if surface_temp_c is None else surface_temp_c)
+    t_surround_k = KELVIN_OFFSET + case.right_radiation.t_surround_c
+''',
+        '''    t_surface_k = case.t_inf_c if surface_temp_c is None else surface_temp_c
+    t_surround_k = case.right_radiation.t_surround_c
+''',
+    )
+
+
+def mutate_radiation_replaces_convection(app_dir: Path) -> None:
+    _replace(
+        app_dir / "thermal_stack" / "solver.py",
+        '''    h_total = case.h_w_m2_k + h_rad
+    t_effective = (
+        case.h_w_m2_k * case.t_inf_c + h_rad * case.right_radiation.t_surround_c
+    ) / h_total
+''',
+        '''    h_total = h_rad
+    t_effective = case.right_radiation.t_surround_c
+''',
+    )
+
+
+def mutate_wrong_surround_temp(app_dir: Path) -> None:
+    _replace(
+        app_dir / "thermal_stack" / "solver.py",
+        "    t_surround_k = KELVIN_OFFSET + case.right_radiation.t_surround_c\n",
+        "    t_surround_k = KELVIN_OFFSET + case.t_inf_c\n",
+    )
+    _replace(
+        app_dir / "thermal_stack" / "solver.py",
+        "        case.h_w_m2_k * case.t_inf_c + h_rad * case.right_radiation.t_surround_c\n",
+        "        case.h_w_m2_k * case.t_inf_c + h_rad * case.t_inf_c\n",
+    )
+
+
 WRONG_FIX_PROBES: dict[str, Callable[[Path], None]] = {
     "all_T_to_K": mutate_all_t_to_k,
     "dates_US": mutate_dates_us,
@@ -221,6 +292,11 @@ WRONG_FIX_PROBES: dict[str, Callable[[Path], None]] = {
     "loose_convergence": mutate_loose_convergence,
     "temp_coeff_uses_celsius": mutate_temp_coeff_uses_celsius,
     "two_pass_only": mutate_two_pass_only,
+    "radiation_ignored": mutate_ignore_radiation,
+    "radiation_constant_ambient": mutate_constant_ambient_radiation,
+    "radiation_celsius": mutate_celsius_radiation,
+    "radiation_replaces_convection": mutate_radiation_replaces_convection,
+    "radiation_wrong_surround": mutate_wrong_surround_temp,
 }
 
 CLUSTER_MISSING_MUTATIONS: dict[str, Callable[[Path], None]] = {
@@ -229,6 +305,7 @@ CLUSTER_MISSING_MUTATIONS: dict[str, Callable[[Path], None]] = {
     "C_state_order_coupling": mutate_cache_unchanged,
     "D_area_contact_temperature": mutate_harmonic_only,
     "E_contact_consistency": mutate_two_pass_only,
+    "F_radiation_boundary_coupling": mutate_ignore_radiation,
 }
 
 
