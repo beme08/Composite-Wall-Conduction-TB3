@@ -67,6 +67,8 @@ class Layer:
 class Contact:
     x_m: float
     r_contact_m2_k_w: float
+    contact_temp_coeff_per_k: float = 0.0
+    contact_t_ref_c: float = 25.0
 
 
 @dataclass(frozen=True)
@@ -202,6 +204,8 @@ def normalize_case_dict(raw_input: dict[str, Any]) -> dict[str, Any]:
             {
                 "x_m": parse_scalar(contact["x_m"]) * unit_scale,
                 "r_contact_m2_k_w": parse_scalar(contact["r_contact_m2_k_w"]),
+                "contact_temp_coeff_per_k": parse_scalar(contact.get("contact_temp_coeff_per_k", 0.0)),
+                "contact_t_ref_c": parse_scalar(contact.get("contact_t_ref_c", 25.0)),
             }
         )
     return {
@@ -241,7 +245,12 @@ def layer_from_dict(raw: dict[str, Any], materials: dict[str, Material]) -> Laye
 
 
 def contact_from_dict(raw: dict[str, Any]) -> Contact:
-    return Contact(parse_scalar(raw["x_m"]), parse_scalar(raw["r_contact_m2_k_w"]))
+    return Contact(
+        x_m=parse_scalar(raw["x_m"]),
+        r_contact_m2_k_w=parse_scalar(raw["r_contact_m2_k_w"]),
+        contact_temp_coeff_per_k=parse_scalar(raw.get("contact_temp_coeff_per_k", 0.0)),
+        contact_t_ref_c=parse_scalar(raw.get("contact_t_ref_c", 25.0)),
+    )
 
 
 def case_from_dict(raw_input: dict[str, Any], materials: dict[str, Material] | None = None) -> Case:
@@ -391,6 +400,16 @@ def _aged_contact(r_contact: float, service_age_days: int) -> float:
     return r_contact * (1.0 + AGE_CONTACT_RATE * service_age_days)
 
 
+def _effective_contact(
+    r_contact: float, temp_coeff: float, t_ref_c: float,
+    service_age_days: int, t_eval_c: float,
+) -> float:
+    if temp_coeff == 0.0:
+        return _aged_contact(r_contact, service_age_days)
+    aged = _aged_contact(r_contact, service_age_days)
+    return aged * (1.0 + temp_coeff * (t_eval_c - t_ref_c))
+
+
 def _internal_g(k_left: float, k_right: float, r_contact: float, dx_m: float, area_m2: float) -> float:
     return area_m2 / (dx_m / (2.0 * k_left) + r_contact + dx_m / (2.0 * k_right))
 
@@ -403,7 +422,7 @@ def _right_g(k_right: float, h_w_m2_k: float, dx_m: float, area_m2: float) -> fl
     return area_m2 / (dx_m / (2.0 * k_right) + 1.0 / h_w_m2_k)
 
 
-def build_mesh(case: Case) -> Mesh:
+def build_mesh(case: Case, override_contacts: dict[int, float] | None = None) -> Mesh:
     validate_case(case)
     dx_m = case.length_m / case.num_cells
     x_values = [(i + 0.5) * dx_m for i in range(case.num_cells)]
@@ -413,10 +432,13 @@ def build_mesh(case: Case) -> Mesh:
         layer = _layer_at_center(case.layers, x_m)
         k_values.append(effective_conductivity(layer.material, case.t_left_c, case.t_inf_c))
         q_values.append(layer.q_w_m3)
-    contact_by_face = {
-        _face_index(contact.x_m, dx_m): _aged_contact(contact.r_contact_m2_k_w, case.service_age_days)
-        for contact in case.contacts
-    }
+    if override_contacts is not None:
+        contact_by_face = override_contacts
+    else:
+        contact_by_face = {
+            _face_index(contact.x_m, dx_m): _aged_contact(contact.r_contact_m2_k_w, case.service_age_days)
+            for contact in case.contacts
+        }
     face_contact_r = [0.0 for _ in range(case.num_cells - 1)]
     interfaces: list[Interface] = []
     for layer in case.layers[:-1]:
@@ -490,10 +512,36 @@ def _interface_diagnostics(case: Case, mesh: Mesh, temperatures: np.ndarray) -> 
     return diagnostics
 
 
-def solve_case(case: Case) -> dict[str, Any]:
-    mesh = build_mesh(case)
+def _solve_core(case: Case, override_contacts: dict[int, float] | None = None) -> tuple:
+    mesh = build_mesh(case, override_contacts=override_contacts)
     matrix, rhs = _assemble(case, mesh)
     temperatures = np.linalg.solve(matrix, rhs)
+    return mesh, temperatures
+
+
+def solve_case(case: Case) -> dict[str, Any]:
+    mesh, temperatures = _solve_core(case)
+
+    has_temp_dependent = any(
+        c.contact_temp_coeff_per_k != 0.0 for c in case.contacts
+    )
+    if has_temp_dependent:
+        diagnostics = _interface_diagnostics(case, mesh, temperatures)
+        override: dict[int, float] = {}
+        for i, contact in enumerate(case.contacts):
+            coeff = contact.contact_temp_coeff_per_k
+            if coeff != 0.0 and i < len(diagnostics):
+                t_eval_c = 0.5 * (diagnostics[i]["temperature_left_c"] + diagnostics[i]["temperature_right_c"])
+                r_eff = _effective_contact(
+                    contact.r_contact_m2_k_w,
+                    coeff,
+                    contact.contact_t_ref_c,
+                    case.service_age_days,
+                    t_eval_c,
+                )
+                override[_face_index(contact.x_m, mesh.dx_m)] = r_eff
+        mesh, temperatures = _solve_core(case, override_contacts=override)
+
     left_flow = _left_g(mesh.k_w_m_k[0], mesh.dx_m, case.area_m2) * (case.t_left_c - float(temperatures[0]))
     right_flow = _right_g(mesh.k_w_m_k[-1], case.h_w_m2_k, mesh.dx_m, case.area_m2) * (
         float(temperatures[-1]) - case.t_inf_c

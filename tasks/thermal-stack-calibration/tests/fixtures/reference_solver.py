@@ -125,6 +125,8 @@ def normalize_case(raw_case: dict[str, Any], materials: dict[str, dict[str, Any]
             {
                 "x_m": parse_scalar(contact["x_m"]) * unit_scale,
                 "r_contact_m2_k_w": parse_scalar(contact["r_contact_m2_k_w"]),
+                "contact_temp_coeff_per_k": parse_scalar(contact.get("contact_temp_coeff_per_k", 0.0)),
+                "contact_t_ref_c": parse_scalar(contact.get("contact_t_ref_c", 25.0)),
             }
         )
     return {
@@ -212,6 +214,14 @@ def _aged_contact(r_contact: float, service_age_days: int) -> float:
     return r_contact * (1.0 + AGE_CONTACT_RATE * service_age_days)
 
 
+def _effective_contact(r_contact: float, temp_coeff: float, t_ref_c: float,
+                       service_age_days: int, t_eval_c: float) -> float:
+    if temp_coeff == 0.0:
+        return _aged_contact(r_contact, service_age_days)
+    aged = _aged_contact(r_contact, service_age_days)
+    return aged * (1.0 + temp_coeff * (t_eval_c - t_ref_c))
+
+
 def _internal_g(k_left: float, k_right: float, r_contact: float, dx_m: float, area_m2: float) -> float:
     return area_m2 / (dx_m / (2.0 * k_left) + r_contact + dx_m / (2.0 * k_right))
 
@@ -224,9 +234,11 @@ def _right_g(k_right: float, h: float, dx_m: float, area_m2: float) -> float:
     return area_m2 / (dx_m / (2.0 * k_right) + 1.0 / h)
 
 
-def solve_case(raw_case: dict[str, Any]) -> dict[str, Any]:
-    case = normalize_case(raw_case)
-    _validate(case)
+def _solve_core(
+    case: dict[str, Any],
+    contact_resistances: dict[int, float] | None = None,
+) -> dict[str, Any]:
+    """Solve once using the given contact resistances (or defaults from aged contacts)."""
     length = case["length_m"]
     n = case["num_cells"]
     dx = length / n
@@ -239,10 +251,13 @@ def solve_case(raw_case: dict[str, Any]) -> dict[str, Any]:
         layer = _layer_at_center(layers, x_m)
         k_values.append(_effective_k(layer["material"], case["t_left_c"], case["t_inf_c"]))
         q_values.append(layer.get("q_w_m3", 0.0))
-    contact_by_face = {
-        _face_index(item["x_m"], dx): _aged_contact(item["r_contact_m2_k_w"], case["service_age_days"])
-        for item in case.get("contacts", [])
-    }
+    if contact_resistances is not None:
+        contact_by_face = contact_resistances
+    else:
+        contact_by_face = {
+            _face_index(item["x_m"], dx): _aged_contact(item["r_contact_m2_k_w"], case["service_age_days"])
+            for item in case.get("contacts", [])
+        }
     face_contact = [0.0 for _ in range(n - 1)]
     interfaces = []
     for layer in layers[:-1]:
@@ -312,7 +327,44 @@ def solve_case(raw_case: dict[str, Any]) -> dict[str, Any]:
         "_linear_residual_inf": float(np.max(np.abs(residual_vec))),
         "_normalized_case": case,
         "_energy_residual_w": float(energy_residual),
+        "_dx": dx,
+        "_k_values": k_values,
     }
+
+
+def solve_case(raw_case: dict[str, Any]) -> dict[str, Any]:
+    case = normalize_case(raw_case)
+    _validate(case)
+
+    # First pass: solve with age-corrected contact resistance only
+    first = _solve_core(case)
+
+    has_temp_dependent = any(
+        c.get("contact_temp_coeff_per_k", 0.0) != 0.0
+        for c in case.get("contacts", [])
+    )
+    if not has_temp_dependent:
+        return {k: v for k, v in first.items() if not k.startswith("_")}
+
+    # Second pass: correct contact resistance for temperature
+    dx = first["_dx"]
+    diagnostics = first["interface_diagnostics"]
+    corrected: dict[int, float] = {}
+    for i, contact in enumerate(case.get("contacts", [])):
+        coeff = contact.get("contact_temp_coeff_per_k", 0.0)
+        if coeff != 0.0 and i < len(diagnostics):
+            t_eval_c = 0.5 * (diagnostics[i]["temperature_left_c"] + diagnostics[i]["temperature_right_c"])
+            r_eff = _effective_contact(
+                contact["r_contact_m2_k_w"],
+                coeff,
+                contact.get("contact_t_ref_c", 25.0),
+                case["service_age_days"],
+                t_eval_c,
+            )
+            corrected[_face_index(contact["x_m"], dx)] = r_eff
+
+    second = _solve_core(case, contact_resistances=corrected)
+    return {k: v for k, v in second.items() if not k.startswith("_")}
 
 
 def public_result(result: dict[str, Any]) -> dict[str, Any]:

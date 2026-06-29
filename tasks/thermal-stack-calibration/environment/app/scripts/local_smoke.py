@@ -16,17 +16,15 @@ def main() -> int:
     payload = json.loads(Path(args.results).read_text(encoding="utf-8"))
     worst = 0.0
     for result in payload.get("results", []):
-        worst = max(
-            worst,
-            abs(float(result.get("energy_residual_w_m2", result.get("energy_residual_w", 0.0)))),
-        )
+        worst = max(worst, abs(float(result.get("energy_residual_w_m2", 0.0))))
         for value in result.get("temperature_c", []):
             if not math.isfinite(float(value)):
-                raise SystemExit("not converged: non-finite temperature")
+                print("not converged: non-finite temperature")
+                return 1
     if worst < 1000.0:
         print("Converged! local smoke check passed")
-        return 0
-    print("Warning: local residual diagnostic is outside the technician smoke threshold")
+    else:
+        print("Warning: local residual diagnostic is outside the technician smoke threshold")
     return 0
 
 

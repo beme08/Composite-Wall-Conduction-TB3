@@ -54,9 +54,9 @@ def _load_app_models_module():
     sys.modules.pop("thermal_stack", None)
     sys.modules["thermal_stack"] = module
     spec.loader.exec_module(module)
-    from thermal_stack.models import case_from_dict, normalize_case_dict  # type: ignore
+    from thermal_stack.models import normalize_case_dict  # type: ignore
 
-    return case_from_dict, normalize_case_dict
+    return normalize_case_dict
 
 
 class SolverOutputTests(unittest.TestCase):
@@ -173,7 +173,14 @@ class SolverOutputTests(unittest.TestCase):
                 self.assertEqual(a, by_id[second])
 
     def test_normalization_is_idempotent_and_non_mutating(self) -> None:
-        case_from_dict, normalize_case_dict = _load_app_models_module()
+        # Grade the normalization contract behaviorally: the case-normalization
+        # entry point must be idempotent and must not mutate the raw input case.
+        # This intentionally does NOT call case_from_dict with a one-argument
+        # signature: the baseline tool defines case_from_dict(raw_input, materials)
+        # and the instruction never asks solvers to change that signature, so a
+        # correct solver that preserves the two-argument call must not be failed
+        # here. Behavioral unit/locale generalization is graded by the other tests.
+        normalize_case_dict = _load_app_models_module()
         probes = [
             case
             for case in self.cases
@@ -187,9 +194,6 @@ class SolverOutputTests(unittest.TestCase):
                 normalized_twice = normalize_case_dict(copy.deepcopy(normalized_once))
                 self.assertEqual(normalized_once, normalized_twice)
                 self.assertEqual(raw, original)
-                case_a = case_from_dict(copy.deepcopy(raw))
-                case_b = case_from_dict(copy.deepcopy(normalized_once))
-                self.assertEqual(case_a, case_b)
 
 
 if __name__ == "__main__":

@@ -6,9 +6,11 @@ derivation.
 
 ## Units
 
-- Lengths are meters.
-- Temperatures are degrees Celsius. Temperature differences are interpreted in
-  kelvin-equivalent units.
+- Lengths are meters by default. Input cases may specify `length_unit` ("m" or
+  "mm"); values must be converted to meters before solving.
+- Temperatures are degrees Celsius by default. Input cases may specify
+  `temperature_unit` ("C" or "K"); values must be converted to Celsius before
+  solving. Temperature differences are interpreted in kelvin-equivalent units.
 - Layer conductivity is `W/(m*K)`.
 - Volumetric heat generation is `W/m^3`.
 - Contact resistance is `m^2*K/W`.

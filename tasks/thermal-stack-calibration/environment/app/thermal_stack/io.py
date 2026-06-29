@@ -9,15 +9,13 @@ from typing import Any
 
 from .models import Case, Material, case_from_dict, material_from_dict
 
-
 APP_ROOT = Path(__file__).resolve().parents[1]
 
 
 def load_materials(path: str | Path | None = None) -> dict[str, Material]:
     material_path = Path(path) if path is not None else APP_ROOT / "data" / "materials_db.csv"
     with material_path.open(encoding="utf-8", newline="") as handle:
-        rows = csv.DictReader(handle, delimiter=";")
-        materials = [material_from_dict(dict(row)) for row in rows]
+        materials = [material_from_dict(dict(row)) for row in csv.DictReader(handle, delimiter=";")]
     return {material.material_id: material for material in materials}
 
 
@@ -34,5 +32,4 @@ def load_cases(path: str | Path) -> list[Case]:
 
 
 def write_results(path: str | Path, results: list[dict[str, Any]]) -> None:
-    payload = {"results": results}
-    Path(path).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    Path(path).write_text(json.dumps({"results": results}, indent=2) + "\n", encoding="utf-8")

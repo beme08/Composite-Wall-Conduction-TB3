@@ -48,23 +48,62 @@ Each case has:
 - `t_inf_c`
 - `h_w_m2_k`
 - `layers`
+- optional `area_m2`, defaulting to `1.0`
+- optional `facility` with metadata (city, region, country, installed_on, measured_on)
+- optional `temperature_unit`, defaulting to `"C"` (use `"C"` for Celsius, `"K"` for Kelvin)
+- optional `length_unit`, defaulting to `"m"` (use `"m"` for metres, `"mm"` for millimetres)
 - optional `contacts`
+
+Numeric fields may arrive as strings using facility-local formatting (e.g.,
+decimal commas may represent decimal points). Unit normalization and number
+parsing must happen before solving.
 
 Each layer has:
 
 - `name`
-- `x_start_m`
-- `x_end_m`
-- `k_w_m_k`
+- `x_start_m`, `x_end_m`
+- `material_id` (resolved through `/app/data/materials_db.csv`)
 - optional `q_w_m3`, defaulting to `0.0`
 
 Each contact has:
 
 - `x_m`
 - `r_contact_m2_k_w`
+- optional `contact_temp_coeff_per_k`, defaulting to `0.0`
+- optional `contact_t_ref_c`, defaulting to `25.0`
 
 A missing contact at an internal layer boundary means ordinary material
 continuity with zero added contact resistance.
+
+## Normalization Contract
+
+The case-normalization path is part of the qualification tool contract. Given a
+raw input case, normalization must be pure and repeatable: normalizing an
+already-normalized case yields an equivalent result, and normalization must not
+mutate the raw input case it is given.
+
+## Contact Temperature Dependence
+
+Some contacts may specify an optional `contact_temp_coeff_per_k` and
+`contact_t_ref_c`. When absent, use `0.0` and `25.0` respectively.
+
+The approved model applies contact aging first, then a deterministic
+temperature correction:
+
+`R_eff = R_0 * age_factor * (1.0 + contact_temp_coeff_per_k * (T_eval_c - contact_t_ref_c))`
+
+For contacts with nonzero `contact_temp_coeff_per_k`, compute `T_eval_c` using
+a two-pass direct solve:
+
+1. Solve once with age-corrected contact resistance and no temperature
+   correction.
+2. Estimate `T_eval_c` as the average of the first-pass left and right
+   interface-side temperatures for that contact.
+3. Recompute contact resistance with the temperature correction.
+4. Solve once more and report the final result.
+
+Do not use an iterative nonlinear solver; the approved model uses this fixed
+two-pass direct correction.
 
 ## Geometry And Validation
 

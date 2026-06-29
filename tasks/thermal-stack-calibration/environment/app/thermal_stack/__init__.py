@@ -1,7 +1,17 @@
-"""Thermal contact stack solver package."""
+"""Thermal stack calibration solver package."""
 
-from .io import load_cases, write_results
-from .models import Case, Contact, Layer
+from .io import load_cases, load_materials, write_results
+from .models import Case, Contact, Facility, Layer, Material
 from .solver import solve_case
 
-__all__ = ["Case", "Contact", "Layer", "load_cases", "solve_case", "write_results"]
+__all__ = [
+    "Case",
+    "Contact",
+    "Facility",
+    "Layer",
+    "Material",
+    "load_cases",
+    "load_materials",
+    "solve_case",
+    "write_results",
+]

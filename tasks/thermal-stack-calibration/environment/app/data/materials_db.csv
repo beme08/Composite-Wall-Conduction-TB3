@@ -10,3 +10,6 @@ cache_left_mat;Austin;TX;US;01/10/2026;1,15;0,00030;293,15;0.0,0.3,-0.1
 cache_right_mat;Austin;TX;US;01/10/2026;0,36;0,00090;293,15;0.0,0.2,-0.2
 cache_hot_left;Austin;TX;US;05/20/2026;0,48;0,00140;293,15;0.0,1.2,-0.4
 cache_hot_right;Austin;TX;US;05/20/2026;5,60;-0,00030;293,15;0.0,-0.4,0.2
+temp_contact_left;Austin;TX;US;01/10/2026;0,85;0,00100;293,15;0.0,0.5,-0.3
+temp_contact_right;Austin;TX;US;01/10/2026;2,10;-0,00020;293,15;0.0,-0.2,0.1
+temp_mm_contact_left;Milan;MI;IT;01/10/2026;1,20;0,00080;293,15;0.0,0.3,-0.2

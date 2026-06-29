@@ -89,6 +89,40 @@
       "contacts": [
         {"x_m": 0.03, "r_contact_m2_k_w": 0.02}
       ]
+    },
+    {
+      "case_id": "cal_temp_dependent_contact_simple",
+      "length_m": 0.08,
+      "num_cells": 16,
+      "area_m2": 1.0,
+      "t_left_c": 90.0,
+      "t_inf_c": 20.0,
+      "h_w_m2_k": 25.0,
+      "facility": {"city": "Austin", "region": "TX", "country": "US", "installed_on": "01/15/2026", "measured_on": "03/15/2026"},
+      "layers": [
+        {"name": "left", "x_start_m": 0.0, "x_end_m": 0.04, "material_id": "temp_contact_left", "q_w_m3": 0.0},
+        {"name": "right", "x_start_m": 0.04, "x_end_m": 0.08, "material_id": "temp_contact_right", "q_w_m3": 0.0}
+      ],
+      "contacts": [
+        {"x_m": 0.04, "r_contact_m2_k_w": 0.005, "contact_temp_coeff_per_k": 0.004, "contact_t_ref_c": 25.0}
+      ]
+    },
+    {
+      "case_id": "cal_temp_dependent_contact_with_source",
+      "length_m": 0.1,
+      "num_cells": 20,
+      "area_m2": 1.0,
+      "t_left_c": 95.0,
+      "t_inf_c": 22.0,
+      "h_w_m2_k": 30.0,
+      "facility": {"city": "Austin", "region": "TX", "country": "US", "installed_on": "02/01/2026", "measured_on": "04/01/2026"},
+      "layers": [
+        {"name": "hot", "x_start_m": 0.0, "x_end_m": 0.05, "material_id": "temp_contact_left", "q_w_m3": 4000.0},
+        {"name": "cold", "x_start_m": 0.05, "x_end_m": 0.1, "material_id": "temp_contact_right", "q_w_m3": 0.0}
+      ],
+      "contacts": [
+        {"x_m": 0.05, "r_contact_m2_k_w": 0.008, "contact_temp_coeff_per_k": 0.006, "contact_t_ref_c": 25.0}
+      ]
     }
   ]
 }
