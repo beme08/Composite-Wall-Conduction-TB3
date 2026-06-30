@@ -71,6 +71,16 @@ For Docker validation, build the two local images and run the separate verifier
 against an extracted `/app`. Expected rewards: Docker nop `0.0`, Docker oracle
 `1.0`.
 
+## Post-analysis findings
+
+After submission, I ran additional boundary sweeps on the hidden-resonance
+sysid design. Those sweeps showed that exact noise-free LTI data is more
+fully determining than intended: public-only or short-horizon data can
+recover the hidden mode with sufficient model order.
+
+I preserved this repository as the sysid attempt and documented the finding
+in [`FINDINGS.md`](./FINDINGS.md).
+
 ## References
 
 See [`docs/references.md`](docs/references.md) for the papers, benchmark docs,
